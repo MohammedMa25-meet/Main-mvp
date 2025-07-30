@@ -268,11 +268,11 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     flexGrow: 1,
-    justifyContent: 'center',
+    paddingVertical: 20,
+    paddingBottom: 200,
   },
   content: {
     flex: 1,
-    justifyContent: 'center',
     paddingHorizontal: 20,
   },
   backButton: {

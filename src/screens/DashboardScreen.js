@@ -29,6 +29,10 @@ const HomepageScreen = ({ navigation, onScreenChange }) => {
   const [shuffledCourses, setShuffledCourses] = useState([]);
   const { isDarkMode } = useDarkMode();
 
+  // Debug logging
+  console.log('DashboardScreen - Current userData:', userData);
+  console.log('DashboardScreen - Profile image:', userData.profileImage);
+
   // Sample job data with the jobs from the image
   const jobs = useMemo(() => [
     {
@@ -387,9 +391,25 @@ const HomepageScreen = ({ navigation, onScreenChange }) => {
         <View style={[styles.sidebar, isDarkMode && styles.sidebarDark]}>
           <View style={styles.sidebarHeader}>
             <View style={styles.logoContainer}>
-              <View style={styles.logoCircle}>
-                <Text style={styles.logoText}>{userData.firstName ? userData.firstName.charAt(0).toUpperCase() : 'B'}</Text>
-              </View>
+              {userData.profileImage ? (
+                <Image 
+                  source={{ uri: userData.profileImage }} 
+                  style={styles.logoCircle}
+                  resizeMode="cover"
+                  onLoad={() => {
+                    console.log('Sidebar header image loaded successfully:', userData.profileImage);
+                  }}
+                  onError={(error) => {
+                    console.error('Sidebar header image loading error:', error);
+                    console.log('Profile image URI:', userData.profileImage);
+                    clearUserData();
+                  }}
+                />
+              ) : (
+                <View style={styles.logoCircle}>
+                  <Ionicons name="person" size={20} color="#FFFFFF" />
+                </View>
+              )}
               <Text style={[styles.logoTitle, titleStyle]}>BridgeIT</Text>
             </View>
           </View>
@@ -415,15 +435,6 @@ const HomepageScreen = ({ navigation, onScreenChange }) => {
 
           <View style={styles.sidebarFooter}>
             <View style={styles.userInfo}>
-              {userData.profileImage ? (
-                <Image source={{ uri: userData.profileImage }} style={styles.userAvatar} />
-              ) : (
-                <View style={styles.userAvatarPlaceholder}>
-                  <Text style={styles.userAvatarText}>
-                    {userData.firstName ? userData.firstName.charAt(0).toUpperCase() : 'U'}
-                  </Text>
-                </View>
-              )}
               <View>
                 <Text style={[styles.userName, titleStyle]}>
                   {userData.firstName && userData.lastName 
@@ -431,7 +442,7 @@ const HomepageScreen = ({ navigation, onScreenChange }) => {
                     : userData.specialization || 'ICT Graduate'}
                 </Text>
                 <Text style={[styles.userLocation, textStyle]}>
-                  {userData.region || 'West Bank'}
+                  {userData.location || 'West Bank'}
                 </Text>
               </View>
             </View>
@@ -457,9 +468,25 @@ const HomepageScreen = ({ navigation, onScreenChange }) => {
             </TouchableOpacity>
           </View>
           <View style={styles.logoContainer}>
-            <View style={styles.logoCircle}>
-              <Text style={styles.logoText}>{userData.firstName ? userData.firstName.charAt(0).toUpperCase() : 'B'}</Text>
-            </View>
+            {userData.profileImage ? (
+              <Image 
+                source={{ uri: userData.profileImage }} 
+                style={styles.logoCircle}
+                resizeMode="cover"
+                onLoad={() => {
+                  console.log('Header logo image loaded successfully:', userData.profileImage);
+                }}
+                onError={(error) => {
+                  console.error('Header logo image loading error:', error);
+                  console.log('Profile image URI:', userData.profileImage);
+                  clearUserData();
+                }}
+              />
+            ) : (
+              <View style={styles.logoCircle}>
+                <Ionicons name="person" size={20} color="#FFFFFF" />
+              </View>
+            )}
             <Text style={[styles.logoTitle, titleStyle]}>BridgeIT</Text>
           </View>
           <TouchableOpacity onPress={handleRefreshSuggestions}>
@@ -696,6 +723,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: 8,
+    overflow: 'hidden',
   },
   logoText: {
     color: '#FFFFFF',
@@ -763,6 +791,7 @@ const styles = StyleSheet.create({
     height: 32,
     borderRadius: 16,
     marginRight: 8,
+    overflow: 'hidden',
   },
   userAvatarPlaceholder: {
     width: 32,

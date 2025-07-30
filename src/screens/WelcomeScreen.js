@@ -20,7 +20,6 @@ import Svg, { Path } from 'react-native-svg';
 const LoginScreen = ({ navigation }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const { language, toggleLanguage, t } = useLanguage();
 
@@ -92,15 +91,15 @@ const LoginScreen = ({ navigation }) => {
             {/* White Bottom Section */}
             <View style={styles.bottomSection}>
               {/* Title */}
-              <Text style={styles.title}>Hello</Text>
-              <Text style={styles.subtitle}>Sign in to your account</Text>
+              <Text style={styles.title}>{t('Hello')}</Text>
+              <Text style={styles.subtitle}>{t('Sign in to your account')}</Text>
               {/* Form */}
               <View style={styles.formContainer}>
                 {/* Email Input */}
                 <View style={styles.inputContainer}>
                   <TextInput
                     style={styles.textInput}
-                    placeholder="john@email.com"
+                    placeholder={t('Email')}
                     placeholderTextColor="#bbb"
                     value={email}
                     onChangeText={setEmail}
@@ -139,7 +138,7 @@ const LoginScreen = ({ navigation }) => {
                   onPress={handleForgotPassword}
                   style={styles.forgotButton}
                 >
-                  <Text style={styles.forgotText}>Forgot your Password?</Text>
+                  <Text style={styles.forgotText}>{t('Forgot your Password?')}</Text>
                 </TouchableOpacity>
                 {/* Sign In Button */}
                 <TouchableOpacity 
@@ -155,7 +154,7 @@ const LoginScreen = ({ navigation }) => {
                     style={styles.buttonGradient}
                   >
                     <Text style={styles.signInText}>
-                      {isLoading ? 'SIGNING IN...' : 'SIGN IN'}
+                      {isLoading ? t('SIGNING IN...') : t('SIGN IN')}
                     </Text>
                   </LinearGradient>
                 </TouchableOpacity>
@@ -167,7 +166,7 @@ const LoginScreen = ({ navigation }) => {
                   activeOpacity={0.8}
                 >
                   <View style={styles.whiteButtonContainer}>
-                    <Text style={styles.createAccountText}>CREATE AN ACCOUNT</Text>
+                    <Text style={styles.createAccountText}>{t('CREATE AN ACCOUNT')}</Text>
                   </View>
                 </TouchableOpacity>
                 
