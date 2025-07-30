@@ -21,6 +21,7 @@ const LoginScreen = ({ navigation }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
   const { language, toggleLanguage, t } = useLanguage();
 
   const handleEmailLogin = async () => {
