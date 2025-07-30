@@ -82,6 +82,10 @@ export const LanguageProvider = ({ children }) => {
     'Arabic': 'العربية',
     'English': 'الإنجليزية',
     'French': 'الفرنسية',
+    'Where are you located?': 'أين تقع؟',
+    'Enter your location': 'أدخل موقعك',
+    'What university did you attend?': 'أي جامعة التحقت بها؟',
+    'Enter your university': 'أدخل جامعتك',
 
     // Dashboard/Home Screen
     'Home': 'الرئيسية',

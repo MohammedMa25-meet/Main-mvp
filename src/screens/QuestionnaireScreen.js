@@ -50,6 +50,18 @@ const QuestionnaireScreen = ({ navigation, route }) => {
       ]
     },
     {
+      id: 'location',
+      question: t('Where are you located?'),
+      type: 'text',
+      placeholder: t('Enter your location')
+    },
+    {
+      id: 'university',
+      question: t('What university did you attend?'),
+      type: 'text',
+      placeholder: t('Enter your university')
+    },
+    {
       id: 'region',
       question: t('Where do you live in the west bank?'),
       type: 'text',
@@ -181,6 +193,8 @@ const QuestionnaireScreen = ({ navigation, route }) => {
     // Save questionnaire data to UserContext
     updateUserData({
       careerGoal: answers.careerGoal,
+      location: answers.location,
+      university: answers.university,
       region: answers.region,
       experience: answers.experience,
       field: answers.field,

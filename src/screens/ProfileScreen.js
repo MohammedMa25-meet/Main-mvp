@@ -42,23 +42,19 @@ const ProfileScreen = ({ navigation, onScreenChange }) => {
     location: userData.location || '',
     university: userData.university || '',
     degree: userData.degree || '',
-    specialization: userData.specialization || '',
   });
 
   // Update profile data when userData changes
   useEffect(() => {
-    if (userData.firstName || userData.lastName || userData.email || userData.phone) {
-      setProfileData(prev => ({
-        ...prev,
-        fullName: userData.firstName && userData.lastName ? `${userData.firstName} ${userData.lastName}` : 'User',
-        email: userData.email || prev.email,
-        phone: userData.phone || prev.phone,
-        location: userData.location || prev.location,
-        university: userData.university || prev.university,
-        degree: userData.degree || prev.degree,
-        specialization: userData.specialization || prev.specialization,
-      }));
-    }
+    setProfileData(prev => ({
+      ...prev,
+      fullName: userData.firstName && userData.lastName ? `${userData.firstName} ${userData.lastName}` : 'User',
+      email: userData.email || prev.email,
+      phone: userData.phone || prev.phone,
+      location: userData.location || prev.location,
+      university: userData.university || prev.university,
+      degree: userData.degree || prev.degree,
+    }));
     
     // Update questionnaire answers from user data
     setQuestionnaireAnswers({
@@ -245,12 +241,7 @@ const ProfileScreen = ({ navigation, onScreenChange }) => {
             </View>
           </View>
 
-          <View style={styles.specializationSection}>
-            <Text style={[styles.detailLabel, textStyle]}>{t('ICT Specialization')}</Text>
-            <Text style={[styles.detailValue, titleStyle]}>
-              {profileData.specialization || t('Not specified')}
-            </Text>
-          </View>
+
 
           {/* Job Interests */}
           <View style={styles.jobInterestsSection}>
@@ -434,16 +425,7 @@ const ProfileScreen = ({ navigation, onScreenChange }) => {
               />
             </View>
             
-            <View style={styles.inputGroup}>
-              <Text style={[styles.inputLabel, textStyle]}>{t('ICT Specialization')}</Text>
-              <TextInput
-                style={[styles.textInput, isDarkMode && styles.textInputDark]}
-                value={editData.specialization}
-                onChangeText={(text) => setEditData({...editData, specialization: text})}
-                placeholder={t('Enter your specialization')}
-                placeholderTextColor={isDarkMode ? '#9CA3AF' : '#9CA3AF'}
-              />
-            </View>
+
           </ScrollView>
           
           <View style={[styles.modalFooter, isDarkMode && styles.modalFooterDark]}>
@@ -653,9 +635,7 @@ const styles = StyleSheet.create({
     color: '#1F2937',
     fontWeight: '600',
   },
-  specializationSection: {
-    marginBottom: 20,
-  },
+
   jobInterestsSection: {
     marginTop: 4,
   },
