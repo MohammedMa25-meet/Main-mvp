@@ -7,6 +7,7 @@ import {
   SafeAreaView,
   ScrollView,
   Switch,
+  Alert,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useDarkMode } from '../context/DarkModeContext';
@@ -155,7 +156,7 @@ const SettingsScreen = ({ navigation, onScreenChange }) => {
 
         {/* Account Section */}
         <View style={styles.section}>
-          <Text style={[styles.sectionTitle, titleStyle]}>Account</Text>
+          <Text style={[styles.sectionTitle, titleStyle]}>{t('Account')}</Text>
         </View>
 
         <View style={[styles.card, cardStyle]}>
@@ -163,9 +164,9 @@ const SettingsScreen = ({ navigation, onScreenChange }) => {
             <View style={styles.settingInfo}>
               <Ionicons name="person-outline" size={24} color="#6B7280" />
               <View style={styles.settingText}>
-                <Text style={[styles.settingTitle, titleStyle]}>Edit Profile</Text>
+                <Text style={[styles.settingTitle, titleStyle]}>{t('Edit Profile')}</Text>
                 <Text style={[styles.settingDescription, textStyle]}>
-                  Update your personal information
+                  {t('Update your personal information')}
                 </Text>
               </View>
             </View>
@@ -178,9 +179,9 @@ const SettingsScreen = ({ navigation, onScreenChange }) => {
             <View style={styles.settingInfo}>
               <Ionicons name="key-outline" size={24} color="#6B7280" />
               <View style={styles.settingText}>
-                <Text style={[styles.settingTitle, titleStyle]}>Change Password</Text>
+                <Text style={[styles.settingTitle, titleStyle]}>{t('Change Password')}</Text>
                 <Text style={[styles.settingDescription, textStyle]}>
-                  Update your password
+                  {t('Update your password')}
                 </Text>
               </View>
             </View>
@@ -189,13 +190,35 @@ const SettingsScreen = ({ navigation, onScreenChange }) => {
 
           <View style={styles.divider} />
 
-          <TouchableOpacity style={[styles.settingItem, styles.dangerItem]}>
+          <TouchableOpacity 
+            style={[styles.settingItem, styles.dangerItem]}
+            onPress={() => {
+              Alert.alert(
+                t('Are you sure you want to logout?'),
+                '',
+                [
+                  {
+                    text: t('Cancel'),
+                    style: 'cancel',
+                  },
+                  {
+                    text: t('Logout'),
+                    style: 'destructive',
+                    onPress: () => {
+                      // Navigate back to Welcome screen
+                      navigation.navigate('Welcome');
+                    },
+                  },
+                ]
+              );
+            }}
+          >
             <View style={styles.settingInfo}>
               <Ionicons name="log-out-outline" size={24} color="#EF4444" />
               <View style={styles.settingText}>
-                <Text style={[styles.settingTitle, styles.dangerText]}>Logout</Text>
+                <Text style={[styles.settingTitle, styles.dangerText]}>{t('Logout')}</Text>
                 <Text style={[styles.settingDescription, textStyle]}>
-                  Sign out of your account
+                  {t('Sign out of your account')}
                 </Text>
               </View>
             </View>

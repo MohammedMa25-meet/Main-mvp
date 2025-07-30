@@ -14,6 +14,7 @@ import { Ionicons } from '@expo/vector-icons';
 import * as DocumentPicker from 'expo-document-picker';
 import { useDarkMode } from '../context/DarkModeContext';
 import { useLanguage } from '../context/LanguageContext';
+import { useUser } from '../context/UserContext';
 
 const QuestionnaireScreen = ({ navigation, route }) => {
   const [currentPage, setCurrentPage] = useState(0);
@@ -33,6 +34,7 @@ const QuestionnaireScreen = ({ navigation, route }) => {
 
   const { isDarkMode } = useDarkMode();
   const { t } = useLanguage();
+  const { updateUserData } = useUser();
 
   const questions = useMemo(() => [
     {
@@ -175,13 +177,23 @@ const QuestionnaireScreen = ({ navigation, route }) => {
 
   const handleFinish = () => {
     setLoading(true);
+    
+    // Save questionnaire data to UserContext
+    updateUserData({
+      careerGoal: answers.careerGoal,
+      region: answers.region,
+      experience: answers.experience,
+      field: answers.field,
+      languages: answers.languages,
+    });
+    
     // Simulate processing
     setTimeout(() => {
       setLoading(false);
       Alert.alert(t('Success'), t('Registration completed successfully!'), [
         {
           text: t('OK'),
-        onPress: () => navigation.navigate('MainScreen')
+          onPress: () => navigation.navigate('MainScreen')
         }
       ]);
     }, 2000);

@@ -18,6 +18,16 @@ export const UserProvider = ({ children }) => {
     phone: '',
     age: '',
     profileImage: null,
+    // Questionnaire fields
+    careerGoal: '',
+    region: '',
+    experience: '',
+    field: [],
+    languages: [],
+    location: '',
+    university: '',
+    degree: '',
+    specialization: '',
     // Add other user fields as needed
   });
 
@@ -37,6 +47,16 @@ export const UserProvider = ({ children }) => {
       phone: '',
       age: '',
       profileImage: null,
+      // Questionnaire fields
+      careerGoal: '',
+      region: '',
+      experience: '',
+      field: [],
+      languages: [],
+      location: '',
+      university: '',
+      degree: '',
+      specialization: '',
     });
   };
 

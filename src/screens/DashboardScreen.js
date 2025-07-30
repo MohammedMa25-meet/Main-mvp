@@ -392,7 +392,6 @@ const HomepageScreen = ({ navigation, onScreenChange }) => {
               </View>
               <Text style={[styles.logoTitle, titleStyle]}>BridgeIT</Text>
             </View>
-            <Text style={[styles.sidebarSubtitle, textStyle]}>ICT Career Platform</Text>
           </View>
 
           <View style={styles.sidebarMenu}>
@@ -426,8 +425,14 @@ const HomepageScreen = ({ navigation, onScreenChange }) => {
                 </View>
               )}
               <View>
-                <Text style={[styles.userName, titleStyle]}>ICT Graduate</Text>
-                <Text style={[styles.userLocation, textStyle]}>West Bank</Text>
+                <Text style={[styles.userName, titleStyle]}>
+                  {userData.firstName && userData.lastName 
+                    ? `${userData.firstName} ${userData.lastName}` 
+                    : userData.specialization || 'ICT Graduate'}
+                </Text>
+                <Text style={[styles.userLocation, textStyle]}>
+                  {userData.region || 'West Bank'}
+                </Text>
               </View>
             </View>
           </View>
@@ -436,6 +441,14 @@ const HomepageScreen = ({ navigation, onScreenChange }) => {
 
       {/* Main Content */}
       <View style={styles.mainContent}>
+        {/* Overlay to close sidebar when tapping outside */}
+        {showSidebar && (
+          <TouchableOpacity 
+            style={styles.sidebarOverlay}
+            activeOpacity={1}
+            onPress={() => setShowSidebar(false)}
+          />
+        )}
         {/* Header */}
         <View style={[styles.header, isDarkMode && styles.headerDark]}>
           <View style={styles.headerLeft}>
@@ -460,7 +473,6 @@ const HomepageScreen = ({ navigation, onScreenChange }) => {
 
         {/* Welcome Section */}
         <View style={styles.welcomeSection}>
-          <Text style={[styles.welcomeTitle, titleStyle]}>{t('Welcome')}, {userData.firstName || 'User'}!</Text>
           <Text style={[styles.welcomeSubtitle, textStyle]}>{t('Your career hub is ready.')}</Text>
         </View>
 
@@ -655,6 +667,15 @@ const styles = StyleSheet.create({
   },
   sidebarDark: {
     backgroundColor: '#1F2937',
+  },
+  sidebarOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    zIndex: 999,
   },
   sidebarHeader: {
     paddingHorizontal: 20,

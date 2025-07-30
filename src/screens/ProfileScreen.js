@@ -27,22 +27,22 @@ const ProfileScreen = ({ navigation, onScreenChange }) => {
   
   // Sample questionnaire answers (in real app, this would come from database)
   const [questionnaireAnswers, setQuestionnaireAnswers] = useState({
-    careerGoal: t('Looking for a new career'),
-    region: 'Ramallah',
-    experience: t('Bachelor\'s or Undergraduate'),
-    field: [t('IT- ICT'), t('Data Analysis')],
-    languages: [t('Arabic'), t('English')],
+    careerGoal: userData.careerGoal || '',
+    region: userData.region || '',
+    experience: userData.experience || '',
+    field: userData.field || [],
+    languages: userData.languages || [],
   });
 
   // Editable profile data - use actual user data from context
   const [profileData, setProfileData] = useState({
-    fullName: 'User',
-    email: 'user@example.com',
-    phone: '+970 59 123 4567',
-    location: 'East Jerusalem',
-    university: 'Al-Quds University',
-    degree: 'Bachelor\'s',
-    specialization: 'Cyber Security',
+    fullName: userData.firstName && userData.lastName ? `${userData.firstName} ${userData.lastName}` : 'User',
+    email: userData.email || '',
+    phone: userData.phone || '',
+    location: userData.location || '',
+    university: userData.university || '',
+    degree: userData.degree || '',
+    specialization: userData.specialization || '',
   });
 
   // Update profile data when userData changes
@@ -53,9 +53,22 @@ const ProfileScreen = ({ navigation, onScreenChange }) => {
         fullName: userData.firstName && userData.lastName ? `${userData.firstName} ${userData.lastName}` : 'User',
         email: userData.email || prev.email,
         phone: userData.phone || prev.phone,
+        location: userData.location || prev.location,
+        university: userData.university || prev.university,
+        degree: userData.degree || prev.degree,
+        specialization: userData.specialization || prev.specialization,
       }));
     }
-  }, [userData]);
+    
+    // Update questionnaire answers from user data
+    setQuestionnaireAnswers({
+      careerGoal: userData.careerGoal || '',
+      region: userData.region || '',
+      experience: userData.experience || '',
+      field: userData.field || [],
+      languages: userData.languages || [],
+    });
+  }, [userData, t]);
 
   const [editData, setEditData] = useState({});
 
@@ -202,29 +215,41 @@ const ProfileScreen = ({ navigation, onScreenChange }) => {
             </View>
             <View style={styles.detailItem}>
               <Text style={[styles.detailLabel, textStyle]}>{t('Email')}</Text>
-              <Text style={[styles.detailValue, titleStyle]}>{profileData.email}</Text>
+              <Text style={[styles.detailValue, titleStyle]}>
+                {profileData.email || t('Not specified')}
+              </Text>
             </View>
             <View style={styles.detailItem}>
               <Text style={[styles.detailLabel, textStyle]}>{t('Phone')}</Text>
-              <Text style={[styles.detailValue, titleStyle]}>{profileData.phone}</Text>
+              <Text style={[styles.detailValue, titleStyle]}>
+                {profileData.phone || t('Not specified')}
+              </Text>
             </View>
             <View style={styles.detailItem}>
               <Text style={[styles.detailLabel, textStyle]}>{t('Location')}</Text>
-              <Text style={[styles.detailValue, titleStyle]}>{profileData.location}</Text>
+              <Text style={[styles.detailValue, titleStyle]}>
+                {profileData.location || t('Not specified')}
+              </Text>
             </View>
             <View style={styles.detailItem}>
               <Text style={[styles.detailLabel, textStyle]}>{t('University')}</Text>
-              <Text style={[styles.detailValue, titleStyle]}>{profileData.university}</Text>
+              <Text style={[styles.detailValue, titleStyle]}>
+                {profileData.university || t('Not specified')}
+              </Text>
             </View>
             <View style={styles.detailItem}>
               <Text style={[styles.detailLabel, textStyle]}>{t('Degree')}</Text>
-              <Text style={[styles.detailValue, titleStyle]}>{profileData.degree}</Text>
+              <Text style={[styles.detailValue, titleStyle]}>
+                {profileData.degree || t('Not specified')}
+              </Text>
             </View>
           </View>
 
           <View style={styles.specializationSection}>
             <Text style={[styles.detailLabel, textStyle]}>{t('ICT Specialization')}</Text>
-            <Text style={[styles.detailValue, titleStyle]}>{profileData.specialization}</Text>
+            <Text style={[styles.detailValue, titleStyle]}>
+              {profileData.specialization || t('Not specified')}
+            </Text>
           </View>
 
           {/* Job Interests */}
@@ -257,38 +282,52 @@ const ProfileScreen = ({ navigation, onScreenChange }) => {
           <View style={styles.questionnaireSection}>
             <View style={styles.questionItem}>
               <Text style={[styles.questionLabel, titleStyle]}>{t('Career Goal')}</Text>
-              <Text style={[styles.questionAnswer, textStyle]}>{questionnaireAnswers.careerGoal}</Text>
+              <Text style={[styles.questionAnswer, textStyle]}>
+                {questionnaireAnswers.careerGoal || t('Not specified')}
+              </Text>
             </View>
             
             <View style={styles.questionItem}>
               <Text style={[styles.questionLabel, titleStyle]}>{t('Region')}</Text>
-              <Text style={[styles.questionAnswer, textStyle]}>{questionnaireAnswers.region}</Text>
+              <Text style={[styles.questionAnswer, textStyle]}>
+                {questionnaireAnswers.region || t('Not specified')}
+              </Text>
             </View>
             
             <View style={styles.questionItem}>
               <Text style={[styles.questionLabel, titleStyle]}>{t('Experience Level')}</Text>
-              <Text style={[styles.questionAnswer, textStyle]}>{questionnaireAnswers.experience}</Text>
+              <Text style={[styles.questionAnswer, textStyle]}>
+                {questionnaireAnswers.experience || t('Not specified')}
+              </Text>
             </View>
             
             <View style={styles.questionItem}>
               <Text style={[styles.questionLabel, titleStyle]}>{t('Field of Experience')}</Text>
               <View style={styles.answerTags}>
-                {questionnaireAnswers.field.map((field, index) => (
-                  <View key={index} style={styles.answerTag}>
-                    <Text style={styles.answerTagText}>{field}</Text>
-                  </View>
-                ))}
+                {questionnaireAnswers.field && questionnaireAnswers.field.length > 0 ? (
+                  questionnaireAnswers.field.map((field, index) => (
+                    <View key={index} style={styles.answerTag}>
+                      <Text style={styles.answerTagText}>{field}</Text>
+                    </View>
+                  ))
+                ) : (
+                  <Text style={[styles.questionAnswer, textStyle]}>{t('Not specified')}</Text>
+                )}
               </View>
             </View>
             
             <View style={styles.questionItem}>
               <Text style={[styles.questionLabel, titleStyle]}>{t('Languages')}</Text>
               <View style={styles.answerTags}>
-                {questionnaireAnswers.languages.map((language, index) => (
-                  <View key={index} style={styles.answerTag}>
-                    <Text style={styles.answerTagText}>{language}</Text>
-                  </View>
-                ))}
+                {questionnaireAnswers.languages && questionnaireAnswers.languages.length > 0 ? (
+                  questionnaireAnswers.languages.map((language, index) => (
+                    <View key={index} style={styles.answerTag}>
+                      <Text style={styles.answerTagText}>{language}</Text>
+                    </View>
+                  ))
+                ) : (
+                  <Text style={[styles.questionAnswer, textStyle]}>{t('Not specified')}</Text>
+                )}
               </View>
             </View>
           </View>
