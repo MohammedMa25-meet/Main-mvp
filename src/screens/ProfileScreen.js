@@ -59,7 +59,6 @@ const ProfileScreen = ({ navigation, onScreenChange }) => {
     // Update questionnaire answers from user data
     setQuestionnaireAnswers({
       careerGoal: userData.careerGoal || '',
-      region: userData.region || '',
       experience: userData.experience || '',
       field: userData.field || [],
       languages: userData.languages || [],
@@ -79,6 +78,14 @@ const ProfileScreen = ({ navigation, onScreenChange }) => {
   // Handle profile image picker
   const pickImage = async () => {
     try {
+      // Request permissions first
+      const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      
+      if (permissionResult.status !== 'granted') {
+        Alert.alert(t('Permission Required'), t('Please grant photo library permissions to upload a profile image.'));
+        return;
+      }
+
       const result = await ImagePicker.launchImageLibraryAsync({
         mediaTypes: ImagePicker.MediaTypeOptions.Images,
         allowsEditing: true,
@@ -87,9 +94,13 @@ const ProfileScreen = ({ navigation, onScreenChange }) => {
       });
 
       if (!result.canceled && result.assets[0]) {
+        console.log('Selected image URI:', result.assets[0].uri);
         updateProfileImage(result.assets[0].uri);
+        console.log('Profile image updated in context:', result.assets[0].uri);
+        Alert.alert(t('Success'), t('Profile image updated successfully!'));
       }
     } catch (error) {
+      console.error('Image picker error:', error);
       Alert.alert(t('Error'), t('Failed to pick image. Please try again.'));
     }
   };
@@ -166,7 +177,16 @@ const ProfileScreen = ({ navigation, onScreenChange }) => {
           <View style={styles.userInfo}>
             <TouchableOpacity style={styles.avatarContainer} onPress={pickImage}>
               {userData.profileImage ? (
-                <Image source={{ uri: userData.profileImage }} style={styles.avatarImage} />
+                <Image 
+                  source={{ uri: userData.profileImage }} 
+                  style={styles.avatarImage}
+                  resizeMode="cover"
+                  onError={(error) => {
+                    console.error('Image loading error:', error);
+                    // If image fails to load, clear the profile image
+                    updateProfileImage(null);
+                  }}
+                />
               ) : (
                 <View style={styles.avatar}>
                   <Text style={styles.avatarText}>{getUserInitial()}</Text>
@@ -275,13 +295,6 @@ const ProfileScreen = ({ navigation, onScreenChange }) => {
               <Text style={[styles.questionLabel, titleStyle]}>{t('Career Goal')}</Text>
               <Text style={[styles.questionAnswer, textStyle]}>
                 {questionnaireAnswers.careerGoal || t('Not specified')}
-              </Text>
-            </View>
-            
-            <View style={styles.questionItem}>
-              <Text style={[styles.questionLabel, titleStyle]}>{t('Region')}</Text>
-              <Text style={[styles.questionAnswer, textStyle]}>
-                {questionnaireAnswers.region || t('Not specified')}
               </Text>
             </View>
             

@@ -20,7 +20,6 @@ export const UserProvider = ({ children }) => {
     profileImage: null,
     // Questionnaire fields
     careerGoal: '',
-    region: '',
     experience: '',
     field: [],
     languages: [],
@@ -36,6 +35,7 @@ export const UserProvider = ({ children }) => {
   };
 
   const updateProfileImage = (imageUri) => {
+    console.log('Updating profile image in UserContext:', imageUri);
     setUserData(prev => ({ ...prev, profileImage: imageUri }));
   };
 
@@ -49,7 +49,6 @@ export const UserProvider = ({ children }) => {
       profileImage: null,
       // Questionnaire fields
       careerGoal: '',
-      region: '',
       experience: '',
       field: [],
       languages: [],

@@ -21,13 +21,19 @@ export const LanguageProvider = ({ children }) => {
   const translations = {
     // Welcome Screen
     'Welcome to Bridge-IT': 'مرحباً بك في Bridge-IT',
+    'Hello': 'مرحباً',
+    'Sign in to your account': 'سجل الدخول إلى حسابك',
     'Sign in to continue': 'سجل الدخول للمتابعة',
     'Email': 'البريد الإلكتروني',
     'Password': 'كلمة المرور',
     'Sign in': 'تسجيل الدخول',
+    'SIGN IN': 'تسجيل الدخول',
+    'SIGNING IN...': 'جاري تسجيل الدخول...',
     'Signing in...': 'جاري تسجيل الدخول...',
+    'Forgot your Password?': 'نسيت كلمة المرور؟',
     'Forgot password?': 'نسيت كلمة المرور؟',
     'Need an account? ': 'تحتاج حساب؟ ',
+    'CREATE AN ACCOUNT': 'إنشاء حساب',
     'Sign up': 'إنشاء حساب',
 
     // Registration Screen
@@ -82,10 +88,12 @@ export const LanguageProvider = ({ children }) => {
     'Arabic': 'العربية',
     'English': 'الإنجليزية',
     'French': 'الفرنسية',
-    'Where are you located?': 'أين تقع؟',
+    'Where do you live?': 'أين تعيش؟',
     'Enter your location': 'أدخل موقعك',
     'What university did you attend?': 'أي جامعة التحقت بها؟',
     'Enter your university': 'أدخل جامعتك',
+    'What is your degree?': 'ما هي شهادتك؟',
+    'Enter your degree': 'أدخل شهادتك',
 
     // Dashboard/Home Screen
     'Home': 'الرئيسية',
@@ -135,6 +143,9 @@ export const LanguageProvider = ({ children }) => {
     'Success': 'نجح',
     'Not specified': 'غير محدد',
     'Profile updated successfully!': 'تم تحديث الملف الشخصي بنجاح!',
+    'Permission Required': 'الإذن مطلوب',
+    'Please grant photo library permissions to upload a profile image.': 'يرجى منح أذونات مكتبة الصور لتحميل صورة الملف الشخصي.',
+    'Profile image updated successfully!': 'تم تحديث صورة الملف الشخصي بنجاح!',
     'Are you sure you want to logout?': 'هل أنت متأكد من أنك تريد تسجيل الخروج؟',
     'AI suggestions refreshed!': 'تم تحديث اقتراحات الذكاء الاصطناعي!',
     'John Doe': 'جون دو',
