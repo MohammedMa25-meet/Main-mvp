@@ -124,9 +124,13 @@ const LoginScreen = ({ navigation }) => {
                     />
                     <TouchableOpacity
                       onPress={() => setShowPassword(!showPassword)}
-                      style={styles.eyeButton}
+                      style={styles.eyeIcon}
                     >
-                      <Text style={styles.eyeText}>👁</Text>
+                      <Ionicons 
+                        name={showPassword ? "eye-outline" : "eye-off-outline"} 
+                        size={20} 
+                        color="#9CA3AF" 
+                      />
                     </TouchableOpacity>
                   </View>
                 </View>
@@ -311,7 +315,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#333',
   },
-  eyeButton: {
+  eyeIcon: {
     padding: 4,
   },
   eyeText: {

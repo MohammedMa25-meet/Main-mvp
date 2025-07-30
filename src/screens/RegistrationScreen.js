@@ -340,7 +340,7 @@ const styles = StyleSheet.create({
     padding: 4,
   },
   createButton: {
-    backgroundColor: '#1F2937',
+    backgroundColor: '#11523d',
     borderRadius: 12,
     paddingVertical: 16,
     marginTop: 8,
