@@ -67,7 +67,7 @@ const LoginScreen = ({ navigation }) => {
             {/* Logo */}
             <View style={styles.logoContainer}>
               <Image 
-                source={require('../../assets/Bridge - I I.png')}
+                source={require('../../assets/Bridge_it_logo.png')}
                 style={styles.logoImage}
                 resizeMode="contain"
               />
@@ -181,8 +181,8 @@ const styles = StyleSheet.create({
   },
   languageToggle: {
     position: 'absolute',
-    top: 50,
-    right: 20,
+    top: 20,
+    right: 15,
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: '#ffffff',
@@ -216,13 +216,13 @@ const styles = StyleSheet.create({
   },
   header: {
     alignItems: 'center',
-    marginBottom: 48,
+    marginBottom: 40,
   },
   logoContainer: {
-    marginBottom: 32,
+    marginBottom: 20,
   },
   logoImage: {
-    width: 120, // Adjust as needed
+    width: 250, // Adjust as needed
     height: 120, // Adjust as needed
   },
   title: {
