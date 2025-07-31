@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import {
   View,
   Text,
@@ -15,15 +15,14 @@ import * as DocumentPicker from 'expo-document-picker';
 import { useDarkMode } from '../context/DarkModeContext';
 import { useLanguage } from '../context/LanguageContext';
 import { useUser } from '../context/UserContext';
+// ✅ Import Firebase services
+import { db } from '../services/firebase';
+import { doc, setDoc } from 'firebase/firestore';
 
 const QuestionnaireScreen = ({ navigation, route }) => {
   const [currentPage, setCurrentPage] = useState(0);
   const [loading, setLoading] = useState(false);
   const [answers, setAnswers] = useState({
-    firstName: '',
-    lastName: '',
-    age: '',
-    phone: '',
     careerGoal: '',
     region: '',
     experience: '',
@@ -35,6 +34,9 @@ const QuestionnaireScreen = ({ navigation, route }) => {
   const { isDarkMode } = useDarkMode();
   const { t } = useLanguage();
   const { updateUserData } = useUser();
+
+  // ✅ Get the user's auth info and initial data passed from the registration screen
+  const { userAuth, userData: initialUserData } = route.params;
 
   const questions = useMemo(() => [
     {
@@ -96,21 +98,10 @@ const QuestionnaireScreen = ({ navigation, route }) => {
   const totalQuestions = questions.length + 1; // +1 for CV upload page
   const progress = ((currentPage + 1) / totalQuestions) * 100;
 
-  // Load user data from registration if available and reset to first question
-  React.useEffect(() => {
+  useEffect(() => {
     // Always start from the first question when entering questionnaire
     setCurrentPage(0);
-    
-    if (route.params?.userData) {
-      setAnswers(prev => ({
-        ...prev,
-        firstName: route.params.userData.firstName || '',
-        lastName: route.params.userData.lastName || '',
-        age: route.params.userData.age ? route.params.userData.age.toString() : '',
-        phone: route.params.userData.phone || '',
-      }));
-    }
-  }, [route.params]);
+  }, []);
 
   const handleAnswer = (questionId, answer) => {
     if (questions[currentPage].type === 'multiple') {
@@ -143,6 +134,9 @@ const QuestionnaireScreen = ({ navigation, route }) => {
   const handleBack = () => {
     if (currentPage > 0) {
       setCurrentPage(currentPage - 1);
+    } else {
+      // If on the first question, navigate back to the registration screen
+      navigation.goBack();
     }
   };
 
@@ -175,28 +169,40 @@ const QuestionnaireScreen = ({ navigation, route }) => {
     handleFinish();
   };
 
-  const handleFinish = () => {
+  const handleFinish = async () => {
     setLoading(true);
     
-    // Save questionnaire data to UserContext
-    updateUserData({
-      careerGoal: answers.careerGoal,
-      region: answers.region,
-      experience: answers.experience,
-      field: answers.field,
-      languages: answers.languages,
-    });
-    
-    // Simulate processing
-    setTimeout(() => {
+    // This is the complete user profile we will save to Firestore
+    const finalUserData = {
+      ...initialUserData, // Data from RegistrationScreen (firstName, lastName, etc.)
+      ...answers,         // Data from this screen (careerGoal, region, etc.)
+      uid: userAuth.uid,  // The unique ID from Firebase Auth
+      email: userAuth.email,
+      // TODO: Handle CV file uploads to Firebase Storage or Appwrite and save the URL here
+      cvUrls: [], 
+      createdAt: new Date(),
+    };
+
+    // We don't need to save the local file objects to Firestore, so we remove it
+    delete finalUserData.cvFiles;
+
+    try {
+      // ✅ Save the complete user document to Firestore using the user's unique ID
+      await setDoc(doc(db, 'users', userAuth.uid), finalUserData);
+      console.log('User profile created in Firestore successfully!');
+
+      // ✅ Update the global user context so the app knows the user is logged in
+      updateUserData(finalUserData);
+      
       setLoading(false);
       Alert.alert(t('Success'), t('Registration completed successfully!'), [
-        {
-          text: t('OK'),
-          onPress: () => navigation.navigate('MainScreen')
-        }
+        { text: t('OK'), onPress: () => navigation.navigate('MainScreen') }
       ]);
-    }, 2000);
+    } catch (error) {
+      setLoading(false);
+      console.error('Error saving user data to Firestore:', error);
+      Alert.alert(t('Error'), t('There was a problem saving your profile.'));
+    }
   };
 
   const renderQuestion = () => {
@@ -205,8 +211,8 @@ const QuestionnaireScreen = ({ navigation, route }) => {
       const currentAnswer = answers[question.id];
 
       return (
-        <ScrollView 
-          style={styles.questionScrollView} 
+        <ScrollView
+          style={styles.questionScrollView}
           showsVerticalScrollIndicator={true}
           contentContainerStyle={styles.questionScrollContent}
         >
@@ -218,7 +224,7 @@ const QuestionnaireScreen = ({ navigation, route }) => {
                 style={[styles.textInput, isDarkMode && styles.textInputDark]}
                 placeholder={question.placeholder}
                 placeholderTextColor={isDarkMode ? '#9CA3AF' : '#9CA3AF'}
-                value={currentAnswer}
+                value={currentAnswer || ''}
                 onChangeText={(text) => handleAnswer(question.id, text)}
               />
             ) : (
@@ -269,7 +275,7 @@ const QuestionnaireScreen = ({ navigation, route }) => {
               {answers.cvFiles.map((file, index) => (
                 <View key={index} style={[styles.fileItem, isDarkMode && styles.fileItemDark]}>
                   <Ionicons name="document-outline" size={20} color="#6B7280" />
-                  <Text style={[styles.fileName, isDarkMode && styles.fileNameDark]}>{file.name}</Text>
+                  <Text style={[styles.fileName, isDarkMode && styles.fileNameDark]} numberOfLines={1}>{file.name}</Text>
                   <TouchableOpacity onPress={() => handleRemoveFile(index)}>
                     <Ionicons name="close-circle" size={20} color="#EF4444" />
                   </TouchableOpacity>
@@ -294,7 +300,6 @@ const QuestionnaireScreen = ({ navigation, route }) => {
 
   return (
     <SafeAreaView style={containerStyle}>
-      {/* Loading Overlay */}
       {loading && (
         <View style={styles.loadingOverlay}>
           <View style={[styles.loadingContent, isDarkMode && styles.loadingContentDark]}>
@@ -304,7 +309,6 @@ const QuestionnaireScreen = ({ navigation, route }) => {
         </View>
       )}
 
-      {/* Header */}
       <View style={headerStyle}>
         <TouchableOpacity style={styles.backButton} onPress={handleBack}>
           <Ionicons name="arrow-back" size={24} color={isDarkMode ? "#FFFFFF" : "#1F2937"} />
@@ -315,7 +319,6 @@ const QuestionnaireScreen = ({ navigation, route }) => {
         <View style={styles.headerRight} />
       </View>
 
-      {/* Progress Bar */}
       <View style={progressContainerStyle}>
         <View style={styles.progressBar}>
           <View style={[styles.progressFill, { width: `${progress}%` }]} />
@@ -323,12 +326,10 @@ const QuestionnaireScreen = ({ navigation, route }) => {
         <Text style={progressTextStyle}>{Math.round(progress)}% {t('Complete')}</Text>
       </View>
 
-      {/* Content */}
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
         {renderQuestion()}
       </ScrollView>
 
-      {/* Navigation Buttons */}
       <View style={navigationContainerStyle}>
         {currentPage < totalQuestions - 1 ? (
           <TouchableOpacity style={styles.nextButton} onPress={handleNext}>
@@ -645,4 +646,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default QuestionnaireScreen; 
+export default QuestionnaireScreen;
