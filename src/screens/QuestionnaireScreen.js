@@ -9,6 +9,8 @@ import {
   TextInput,
   Alert,
   ActivityIndicator,
+  KeyboardAvoidingView,
+  Platform,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import * as DocumentPicker from 'expo-document-picker';
@@ -24,7 +26,9 @@ const QuestionnaireScreen = ({ navigation, route }) => {
   const [loading, setLoading] = useState(false);
   const [answers, setAnswers] = useState({
     careerGoal: '',
-    region: '',
+    location: '',
+    university: '',
+    degree: '',
     experience: '',
     field: [],
     languages: [],
@@ -52,10 +56,22 @@ const QuestionnaireScreen = ({ navigation, route }) => {
       ]
     },
     {
-      id: 'region',
-      question: t('Where do you live in the west bank?'),
+      id: 'location',
+      question: t('Where do you live?'),
       type: 'text',
-      placeholder: t('Type in the region')
+      placeholder: t('Enter your location')
+    },
+    {
+      id: 'university',
+      question: t('What university did you attend?'),
+      type: 'text',
+      placeholder: t('Enter your university')
+    },
+    {
+      id: 'degree',
+      question: t('What is your degree?'),
+      type: 'text',
+      placeholder: t('Enter your degree')
     },
     {
       id: 'experience',
@@ -172,28 +188,19 @@ const QuestionnaireScreen = ({ navigation, route }) => {
   const handleFinish = async () => {
     setLoading(true);
     
-    // This is the complete user profile we will save to Firestore
-    const finalUserData = {
-      ...initialUserData, // Data from RegistrationScreen (firstName, lastName, etc.)
-      ...answers,         // Data from this screen (careerGoal, region, etc.)
-      uid: userAuth.uid,  // The unique ID from Firebase Auth
-      email: userAuth.email,
-      // TODO: Handle CV file uploads to Firebase Storage or Appwrite and save the URL here
-      cvUrls: [], 
-      createdAt: new Date(),
-    };
-
-    // We don't need to save the local file objects to Firestore, so we remove it
-    delete finalUserData.cvFiles;
-
-    try {
-      // ✅ Save the complete user document to Firestore using the user's unique ID
-      await setDoc(doc(db, 'users', userAuth.uid), finalUserData);
-      console.log('User profile created in Firestore successfully!');
-
-      // ✅ Update the global user context so the app knows the user is logged in
-      updateUserData(finalUserData);
-      
+    // Save questionnaire data to UserContext
+    updateUserData({
+      careerGoal: answers.careerGoal,
+      location: answers.location,
+      university: answers.university,
+      degree: answers.degree,
+      experience: answers.experience,
+      field: answers.field,
+      languages: answers.languages,
+    });
+    
+    // Simulate processing
+    setTimeout(() => {
       setLoading(false);
       Alert.alert(t('Success'), t('Registration completed successfully!'), [
         { text: t('OK'), onPress: () => navigation.navigate('MainScreen') }
@@ -300,53 +307,66 @@ const QuestionnaireScreen = ({ navigation, route }) => {
 
   return (
     <SafeAreaView style={containerStyle}>
-      {loading && (
-        <View style={styles.loadingOverlay}>
-          <View style={[styles.loadingContent, isDarkMode && styles.loadingContentDark]}>
-            <ActivityIndicator size="large" color="#556B2F" />
-            <Text style={[styles.loadingText, isDarkMode && styles.loadingTextDark]}>{t('Getting to know you...')}</Text>
+      <KeyboardAvoidingView 
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        style={styles.keyboardView}
+      >
+        {/* Loading Overlay */}
+        {loading && (
+          <View style={styles.loadingOverlay}>
+            <View style={[styles.loadingContent, isDarkMode && styles.loadingContentDark]}>
+              <ActivityIndicator size="large" color="#556B2F" />
+              <Text style={[styles.loadingText, isDarkMode && styles.loadingTextDark]}>{t('Getting to know you...')}</Text>
+            </View>
           </View>
-        </View>
-      )}
-
-      <View style={headerStyle}>
-        <TouchableOpacity style={styles.backButton} onPress={handleBack}>
-          <Ionicons name="arrow-back" size={24} color={isDarkMode ? "#FFFFFF" : "#1F2937"} />
-        </TouchableOpacity>
-        <Text style={[styles.headerTitle, isDarkMode && styles.headerTitleDark]}>
-          {currentPage < questions.length ? t('Questionnaire') : t('CV Upload')}
-        </Text>
-        <View style={styles.headerRight} />
-      </View>
-
-      <View style={progressContainerStyle}>
-        <View style={styles.progressBar}>
-          <View style={[styles.progressFill, { width: `${progress}%` }]} />
-        </View>
-        <Text style={progressTextStyle}>{Math.round(progress)}% {t('Complete')}</Text>
-      </View>
-
-      <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
-        {renderQuestion()}
-      </ScrollView>
-
-      <View style={navigationContainerStyle}>
-        {currentPage < totalQuestions - 1 ? (
-          <TouchableOpacity style={styles.nextButton} onPress={handleNext}>
-            <Text style={styles.nextButtonText}>{t('Next')}</Text>
-            <Ionicons name="arrow-forward" size={20} color="#FFFFFF" />
-          </TouchableOpacity>
-        ) : (
-          <TouchableOpacity style={styles.finishButton} onPress={handleFinish}>
-            <Text style={styles.finishButtonText}>{t('Finish Registration')}</Text>
-          </TouchableOpacity>
         )}
-      </View>
+
+        {/* Header */}
+        <View style={headerStyle}>
+          <TouchableOpacity style={styles.backButton} onPress={handleBack}>
+            <Ionicons name="arrow-back" size={24} color={isDarkMode ? "#FFFFFF" : "#1F2937"} />
+          </TouchableOpacity>
+          <Text style={[styles.headerTitle, isDarkMode && styles.headerTitleDark]}>
+            {currentPage < questions.length ? t('Questionnaire') : t('CV Upload')}
+          </Text>
+          <View style={styles.headerRight} />
+        </View>
+
+        {/* Progress Bar */}
+        <View style={progressContainerStyle}>
+          <View style={styles.progressBar}>
+            <View style={[styles.progressFill, { width: `${progress}%` }]} />
+          </View>
+          <Text style={progressTextStyle}>{Math.round(progress)}% {t('Complete')}</Text>
+        </View>
+
+        {/* Content */}
+        <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
+          {renderQuestion()}
+        </ScrollView>
+
+        {/* Navigation Buttons */}
+        <View style={navigationContainerStyle}>
+          {currentPage < totalQuestions - 1 ? (
+            <TouchableOpacity style={styles.nextButton} onPress={handleNext}>
+              <Text style={styles.nextButtonText}>{t('Next')}</Text>
+              <Ionicons name="arrow-forward" size={20} color="#FFFFFF" />
+            </TouchableOpacity>
+          ) : (
+            <TouchableOpacity style={styles.finishButton} onPress={handleFinish}>
+              <Text style={styles.finishButtonText}>{t('Finish Registration')}</Text>
+            </TouchableOpacity>
+          )}
+        </View>
+      </KeyboardAvoidingView>
     </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
+  keyboardView: {
+    flex: 1,
+  },
   container: {
     flex: 1,
     backgroundColor: '#F9FAFB',
@@ -450,6 +470,7 @@ const styles = StyleSheet.create({
   },
   questionScrollContent: {
     flexGrow: 1,
+    paddingBottom: 200,
   },
   questionContainer: {
     backgroundColor: '#FFFFFF',
