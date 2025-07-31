@@ -182,16 +182,7 @@ const ProfileScreen = ({ navigation, onScreenChange }) => {
           <View style={styles.userInfo}>
             <TouchableOpacity style={styles.avatarContainer} onPress={pickImage}>
               {userData.profileImage ? (
-                <Image 
-                  source={{ uri: userData.profileImage }} 
-                  style={styles.avatarImage}
-                  resizeMode="cover"
-                  onError={(error) => {
-                    console.error('Image loading error:', error);
-                    // If image fails to load, clear the profile image
-                    updateProfileImage(null);
-                  }}
-                />
+                <Image source={{ uri: userData.profileImage }} style={styles.avatarImage} />
               ) : (
                 <View style={styles.avatar}>
                   <Text style={styles.avatarText}>{getUserInitial()}</Text>
