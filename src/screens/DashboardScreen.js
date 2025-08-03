@@ -29,29 +29,19 @@ const HomepageScreen = ({ navigation, onScreenChange }) => {
   const [showCourseModal, setShowCourseModal] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
 
-  // These states will now hold the AI-recommended data
   const [courses, setCourses] = useState([]);
   const [jobs, setJobs] = useState([]);
 
-  // This effect loads initial data from the user's profile when the screen loads
   useEffect(() => {
     if (userData) {
-      setCourses(userData.recommendedCourses || []);
-      setJobs(userData.recommendedJobs || []);
+      // ✅ --- THIS IS THE FIX --- ✅
+      // We add .filter(item => item && item.id) to safely remove any bad data
+      // that might have been saved to the user's profile, preventing the crash.
+      setCourses((userData.recommendedCourses || []).filter(c => c && c.id));
+      setJobs((userData.recommendedJobs || []).filter(j => j && j.id));
     }
     setIsLoading(false);
   }, [userData]);
-
-  const handleMenuPress = () => setShowSidebar(!showSidebar);
-  const handleJobPress = (job) => { setSelectedJob(job); setShowJobModal(true); };
-  const handleCoursePress = (course) => { setSelectedCourse(course); setShowCourseModal(true); };
-  const handleProfilePress = () => { setShowSidebar(false); if (onScreenChange) onScreenChange('Profile'); };
-  const handleSettingsPress = () => { setShowSidebar(false); if (onScreenChange) onScreenChange('Settings'); };
-  const handleLogout = () => {
-    setShowSidebar(false);
-    clearUserData();
-    navigation.reset({ index: 0, routes: [{ name: 'Welcome' }] });
-  };
 
   const handleRefreshSuggestions = async () => {
     if (!userData) {
@@ -65,9 +55,10 @@ const HomepageScreen = ({ navigation, onScreenChange }) => {
       
       const updatedUserData = { ...userData, recommendedCourses, recommendedJobs, lastAnalysisDate: new Date() };
       updateUserData(updatedUserData);
-      
-      setCourses(recommendedCourses || []);
-      setJobs(recommendedJobs || []);
+
+      // Also apply the safety filter here
+      setCourses((recommendedCourses || []).filter(c => c && c.id));
+      setJobs((recommendedJobs || []).filter(j => j && j.id));
 
       Alert.alert(t('Success'), t('Your AI suggestions have been refreshed!'));
     } catch (error) {
@@ -78,6 +69,17 @@ const HomepageScreen = ({ navigation, onScreenChange }) => {
     }
   };
 
+  const handleMenuPress = () => setShowSidebar(!showSidebar);
+  const handleJobPress = (job) => { setSelectedJob(job); setShowJobModal(true); };
+  const handleCoursePress = (course) => { setSelectedCourse(course); setShowCourseModal(true); };
+  const handleProfilePress = () => { setShowSidebar(false); if (onScreenChange) onScreenChange('Profile'); };
+  const handleSettingsPress = () => { setShowSidebar(false); if (onScreenChange) onScreenChange('Settings'); };
+  const handleLogout = () => {
+    setShowSidebar(false);
+    clearUserData();
+    navigation.reset({ index: 0, routes: [{ name: 'Welcome' }] });
+  };
+  
   const { isDarkMode } = useDarkMode();
   const containerStyle = isDarkMode ? styles.containerDark : styles.container;
   const cardStyle = isDarkMode ? styles.cardDark : styles.card;
@@ -109,7 +111,7 @@ const HomepageScreen = ({ navigation, onScreenChange }) => {
 
         <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
           {isLoading ? (
-            <View style={styles.loadingContainer}><ActivityIndicator size="large" color={isDarkMode ? "#FFFFFF" : "#065F46"} /><Text style={textStyle}>Fetching Live Recommendations...</Text></View>
+            <View style={styles.loadingContainer}><ActivityIndicator size="large" color={isDarkMode ? "#FFFFFF" : "#065F46"} /><Text style={textStyle}>Loading Recommendations...</Text></View>
           ) : activeTab === 'Jobs' ? (
             <View>{jobs.map((job) => (<TouchableOpacity key={job.id} style={[styles.jobCard, cardStyle]} onPress={() => handleJobPress(job)}><View style={styles.jobHeader}><View style={styles.categoryTag}><Text style={styles.categoryText}>{job.category || 'General'}</Text></View><Image source={{uri: job.image || 'https://source.unsplash.com/400x400/?company,logo'}} style={styles.jobIcon} /></View><Text style={[styles.jobTitle, titleStyle]}>{job.title}</Text><Text style={[styles.companyName, textStyle]}>{job.company}</Text><View style={styles.jobDetails}><View style={styles.jobDetailItem}><Ionicons name="location-outline" size={16} color="#6b7280" /><Text style={styles.jobDetailText}>{job.location}</Text></View><View style={styles.jobDetailItem}><Ionicons name="business-outline" size={16} color="#6b7280" /><Text style={styles.jobDetailText}>{job.workType}</Text></View></View><Text style={[styles.jobDescription, textStyle]} numberOfLines={3}>{job.description}</Text><TouchableOpacity style={styles.viewDetailsButton} onPress={() => handleJobPress(job)}><Text style={styles.viewDetailsText}>{t('View Details')}</Text><Ionicons name="arrow-forward" size={16} color="#ffffff" /></TouchableOpacity></TouchableOpacity>))}
             </View>

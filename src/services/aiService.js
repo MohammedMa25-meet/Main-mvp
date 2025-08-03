@@ -11,7 +11,7 @@ const genAI = new GoogleGenerativeAI(API_KEY);
 const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
 
 /**
- * The "Matching & Ranking Agent" - now smarter and recommends jobs.
+ * The "Matching & Ranking Agent" - now with a safety check.
  */
 const getAiRecommendations = async (userData, courseCatalog, jobListings) => {
   console.log('AI Service: Analyzing user profile against courses and jobs...');
@@ -24,12 +24,12 @@ const getAiRecommendations = async (userData, courseCatalog, jobListings) => {
     - Experience: ${userData.experience}
     - Interests: ${userData.field.join(', ')}
 
-    AVAILABLE COURSES (pick 3 from this list):
+    AVAILABLE COURSES (pick up to 3 from this list):
     ---
-    ${JSON.stringify(courseCatalog.slice(0, 10))} 
+    ${JSON.stringify(courseCatalog.slice(0, 10))}
     ---
 
-    AVAILABLE JOBS (pick 3 from this list):
+    AVAILABLE JOBS (pick up to 3 from this list):
     ---
     ${JSON.stringify(jobListings.slice(0, 10))}
     ---
@@ -44,15 +44,27 @@ const getAiRecommendations = async (userData, courseCatalog, jobListings) => {
     const result = await model.generateContent(prompt);
     const responseText = result.response.text();
     const cleanedResponse = responseText.replace(/```json/g, "").replace(/```/g, "").trim();
-    return JSON.parse(cleanedResponse);
+    const recommendations = JSON.parse(cleanedResponse);
+
+    // ✅ --- THIS IS THE FIX --- ✅
+    // We will now validate the AI's response to prevent crashes.
+    const safeRecommendations = {
+      recommendedCourses: (recommendations.recommendedCourses || []).filter(course => course && course.id),
+      recommendedJobs: (recommendations.recommendedJobs || []).filter(job => job && job.id)
+    };
+    
+    console.log('AI Service: Recommendations received and validated successfully.');
+    return safeRecommendations;
+
   } catch (error) {
     console.error("Gemini API Error:", error);
     throw new Error('Failed to get recommendations from AI.');
   }
 };
 
+
 /**
- * The "Orchestrator" - now runs the full AI pipeline for both courses AND jobs.
+ * The "Orchestrator" - runs the full AI pipeline for both courses AND jobs.
  */
 export const runFullAiAnalysis = async (userData) => {
   console.log('Running full AI analysis for user:', userData.uid);
@@ -75,8 +87,8 @@ export const runFullAiAnalysis = async (userData) => {
     console.log('AI System: Saving new recommendations to Firebase...');
     const userDocRef = doc(db, 'users', userData.uid);
     await updateDoc(userDocRef, {
-      recommendedCourses: recommendedCourses || [],
-      recommendedJobs: recommendedJobs || [],
+      recommendedCourses: recommendedCourses,
+      recommendedJobs: recommendedJobs,
       analysisComplete: true,
       lastAnalysisDate: new Date(),
     });
