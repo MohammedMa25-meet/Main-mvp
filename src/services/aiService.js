@@ -18,7 +18,7 @@ const getAiRecommendations = async (userData, courseCatalog, jobListings) => {
   const prompt = `
     You are an expert career advisor. Analyze the user's profile, the available courses, and the available jobs.
     Your task is to select the top 3 courses AND the top 3 jobs that are the best fit.
-
+    When looking for jobs, please filter to show only those who are in the Gulf area and that are in the ICT field.
     USER PROFILE:
     - Goal: "${userData.careerGoal}"
     - Experience: ${userData.experience}
