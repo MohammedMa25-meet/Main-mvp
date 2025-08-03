@@ -15,13 +15,16 @@ import * as DocumentPicker from 'expo-document-picker';
 import { useDarkMode } from '../context/DarkModeContext';
 import { useLanguage } from '../context/LanguageContext';
 import { useUser } from '../context/UserContext';
-// ✅ Import Firebase services
+// Import all necessary services
 import { db } from '../services/firebase';
-import { doc, setDoc } from 'firebase/firestore';
+import { doc, setDoc, updateDoc } from 'firebase/firestore';
+import { fetchCourses } from '../services/courseService';
+import { getAiRecommendations } from '../services/aiService';
 
 const QuestionnaireScreen = ({ navigation, route }) => {
   const [currentPage, setCurrentPage] = useState(0);
   const [loading, setLoading] = useState(false);
+  const [loadingText, setLoadingText] = useState('');
   const [answers, setAnswers] = useState({
     careerGoal: '',
     region: '',
@@ -34,8 +37,6 @@ const QuestionnaireScreen = ({ navigation, route }) => {
   const { isDarkMode } = useDarkMode();
   const { t } = useLanguage();
   const { updateUserData } = useUser();
-
-  // ✅ Get the user's auth info and initial data passed from the registration screen
   const { userAuth, userData: initialUserData } = route.params;
 
   const questions = useMemo(() => [
@@ -99,7 +100,6 @@ const QuestionnaireScreen = ({ navigation, route }) => {
   const progress = ((currentPage + 1) / totalQuestions) * 100;
 
   useEffect(() => {
-    // Always start from the first question when entering questionnaire
     setCurrentPage(0);
   }, []);
 
@@ -124,10 +124,8 @@ const QuestionnaireScreen = ({ navigation, route }) => {
       return;
     }
 
-    if (currentPage < questions.length - 1) {
+    if (currentPage < questions.length) {
       setCurrentPage(currentPage + 1);
-    } else {
-      setCurrentPage(currentPage + 1); // Move to CV upload page
     }
   };
 
@@ -135,7 +133,6 @@ const QuestionnaireScreen = ({ navigation, route }) => {
     if (currentPage > 0) {
       setCurrentPage(currentPage - 1);
     } else {
-      // If on the first question, navigate back to the registration screen
       navigation.goBack();
     }
   };
@@ -171,36 +168,49 @@ const QuestionnaireScreen = ({ navigation, route }) => {
 
   const handleFinish = async () => {
     setLoading(true);
-    
-    // This is the complete user profile we will save to Firestore
+
     const finalUserData = {
-      ...initialUserData, // Data from RegistrationScreen (firstName, lastName, etc.)
-      ...answers,         // Data from this screen (careerGoal, region, etc.)
-      uid: userAuth.uid,  // The unique ID from Firebase Auth
+      ...initialUserData,
+      ...answers,
+      uid: userAuth.uid,
       email: userAuth.email,
-      // TODO: Handle CV file uploads to Firebase Storage or Appwrite and save the URL here
-      cvUrls: [], 
+      cvUrls: [],
       createdAt: new Date(),
     };
-
-    // We don't need to save the local file objects to Firestore, so we remove it
     delete finalUserData.cvFiles;
 
     try {
-      // ✅ Save the complete user document to Firestore using the user's unique ID
-      await setDoc(doc(db, 'users', userAuth.uid), finalUserData);
+      setLoadingText(t('Saving your profile...'));
+      const userDocRef = doc(db, 'users', userAuth.uid);
+      await setDoc(userDocRef, finalUserData);
       console.log('User profile created in Firestore successfully!');
 
-      // ✅ Update the global user context so the app knows the user is logged in
-      updateUserData(finalUserData);
-      
+      setLoadingText(t('Finding courses...'));
+      const searchKeywords = finalUserData.field.join(' ') || 'professional development';
+      const courseCatalog = await fetchCourses(searchKeywords);
+
+      if (courseCatalog && courseCatalog.length > 0) {
+        setLoadingText(t('AI is analyzing your profile...'));
+        const recommendedCourses = await getAiRecommendations(finalUserData, courseCatalog);
+
+        await updateDoc(userDocRef, {
+          recommendedCourses: recommendedCourses,
+          analysisComplete: true,
+        });
+
+        updateUserData({ ...finalUserData, recommendedCourses, analysisComplete: true });
+      } else {
+        console.log("No courses found to analyze. Skipping AI recommendations.");
+        updateUserData(finalUserData);
+      }
+
       setLoading(false);
       Alert.alert(t('Success'), t('Registration completed successfully!'), [
         { text: t('OK'), onPress: () => navigation.navigate('MainScreen') }
       ]);
     } catch (error) {
       setLoading(false);
-      console.error('Error saving user data to Firestore:', error);
+      console.error('Error during final registration step:', error);
       Alert.alert(t('Error'), t('There was a problem saving your profile.'));
     }
   };
@@ -218,7 +228,7 @@ const QuestionnaireScreen = ({ navigation, route }) => {
         >
           <View style={[styles.questionContainer, isDarkMode && styles.questionContainerDark]}>
             <Text style={[styles.questionText, isDarkMode && styles.questionTextDark]}>{question.question}</Text>
-            
+
             {question.type === 'text' ? (
               <TextInput
                 style={[styles.textInput, isDarkMode && styles.textInputDark]}
@@ -263,7 +273,7 @@ const QuestionnaireScreen = ({ navigation, route }) => {
       return (
         <View style={[styles.cvContainer, isDarkMode && styles.cvContainerDark]}>
           <Text style={[styles.questionText, isDarkMode && styles.questionTextDark]}>{t('Please enter your credentials and resume')}</Text>
-          
+
           <TouchableOpacity style={styles.uploadButton} onPress={handleFileUpload}>
             <Ionicons name="cloud-upload-outline" size={24} color="#10B981" />
             <Text style={styles.uploadButtonText}>{t('Upload CV/Resume')}</Text>
@@ -304,7 +314,7 @@ const QuestionnaireScreen = ({ navigation, route }) => {
         <View style={styles.loadingOverlay}>
           <View style={[styles.loadingContent, isDarkMode && styles.loadingContentDark]}>
             <ActivityIndicator size="large" color="#556B2F" />
-            <Text style={[styles.loadingText, isDarkMode && styles.loadingTextDark]}>{t('Getting to know you...')}</Text>
+            <Text style={[styles.loadingText, isDarkMode && styles.loadingTextDark]}>{loadingText}</Text>
           </View>
         </View>
       )}
@@ -331,7 +341,7 @@ const QuestionnaireScreen = ({ navigation, route }) => {
       </ScrollView>
 
       <View style={navigationContainerStyle}>
-        {currentPage < totalQuestions - 1 ? (
+        {currentPage < totalQuestions ? (
           <TouchableOpacity style={styles.nextButton} onPress={handleNext}>
             <Text style={styles.nextButtonText}>{t('Next')}</Text>
             <Ionicons name="arrow-forward" size={20} color="#FFFFFF" />
@@ -347,303 +357,61 @@ const QuestionnaireScreen = ({ navigation, route }) => {
 };
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#F9FAFB',
-  },
-  containerDark: {
-    flex: 1,
-    backgroundColor: '#111827',
-  },
-  loadingOverlay: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    justifyContent: 'center',
-    alignItems: 'center',
-    zIndex: 1000,
-  },
-  loadingContent: {
-    backgroundColor: '#FFFFFF',
-    padding: 30,
-    borderRadius: 16,
-    alignItems: 'center',
-  },
-  loadingContentDark: {
-    backgroundColor: '#1F2937',
-  },
-  loadingText: {
-    marginTop: 16,
-    fontSize: 18,
-    fontWeight: '600',
-    color: '#1F2937',
-  },
-  loadingTextDark: {
-    color: '#F9FAFB',
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 20,
-    paddingVertical: 16,
-    backgroundColor: '#FFFFFF',
-    borderBottomWidth: 1,
-    borderBottomColor: '#E5E7EB',
-  },
-  headerDark: {
-    backgroundColor: '#1F2937',
-    borderBottomColor: '#374151',
-  },
-  backButton: {
-    padding: 8,
-  },
-  headerTitle: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: '#1F2937',
-  },
-  headerTitleDark: {
-    color: '#F9FAFB',
-  },
-  headerRight: {
-    width: 40,
-  },
-  progressContainer: {
-    paddingHorizontal: 20,
-    paddingVertical: 16,
-    backgroundColor: '#FFFFFF',
-  },
-  progressContainerDark: {
-    backgroundColor: '#1F2937',
-  },
-  progressBar: {
-    height: 8,
-    backgroundColor: '#E5E7EB',
-    borderRadius: 4,
-    overflow: 'hidden',
-  },
-  progressFill: {
-    height: '100%',
-    backgroundColor: '#556B2F',
-    borderRadius: 4,
-  },
-  progressText: {
-    marginTop: 8,
-    fontSize: 14,
-    color: '#6B7280',
-    textAlign: 'center',
-  },
-  progressTextDark: {
-    color: '#D1D5DB',
-  },
-  content: {
-    flex: 1,
-    paddingHorizontal: 20,
-    paddingVertical: 24,
-  },
-  questionScrollView: {
-    flex: 1,
-  },
-  questionScrollContent: {
-    flexGrow: 1,
-  },
-  questionContainer: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 16,
-    padding: 24,
-    marginBottom: 20,
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 4,
-  },
-  questionContainerDark: {
-    backgroundColor: '#1F2937',
-  },
-  questionText: {
-    fontSize: 20,
-    fontWeight: '600',
-    color: '#1F2937',
-    marginBottom: 24,
-    lineHeight: 28,
-  },
-  questionTextDark: {
-    color: '#F9FAFB',
-  },
-  textInput: {
-    borderWidth: 1,
-    borderColor: '#E5E7EB',
-    borderRadius: 12,
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    fontSize: 16,
-    color: '#1F2937',
-    backgroundColor: '#FFFFFF',
-  },
-  textInputDark: {
-    borderColor: '#374151',
-    color: '#F9FAFB',
-    backgroundColor: '#374151',
-  },
-  optionsContainer: {
-    gap: 12,
-  },
-  optionButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    borderWidth: 1,
-    borderColor: '#E5E7EB',
-    borderRadius: 12,
-    backgroundColor: '#FFFFFF',
-  },
-  optionButtonDark: {
-    borderColor: '#374151',
-    backgroundColor: '#374151',
-  },
-  selectedOption: {
-    borderColor: '#556B2F',
-    backgroundColor: '#F0FDF4',
-  },
-  optionText: {
-    fontSize: 16,
-    color: '#374151',
-    flex: 1,
-  },
-  optionTextDark: {
-    color: '#D1D5DB',
-  },
-  selectedOptionText: {
-    color: '#556B2F',
-    fontWeight: '600',
-  },
-  cvContainer: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 16,
-    padding: 24,
-    marginBottom: 20,
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 4,
-  },
-  cvContainerDark: {
-    backgroundColor: '#1F2937',
-  },
-  uploadButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 16,
-    paddingHorizontal: 24,
-    borderWidth: 2,
-    borderColor: '#556B2F',
-    borderStyle: 'dashed',
-    borderRadius: 12,
-    marginVertical: 16,
-  },
-  uploadButtonText: {
-    marginLeft: 8,
-    fontSize: 16,
-    color: '#556B2F',
-    fontWeight: '600',
-  },
-  filesContainer: {
-    marginTop: 20,
-  },
-  filesTitle: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#1F2937',
-    marginBottom: 12,
-  },
-  filesTitleDark: {
-    color: '#F9FAFB',
-  },
-  fileItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: 8,
-    paddingHorizontal: 12,
-    backgroundColor: '#F9FAFB',
-    borderRadius: 8,
-    marginBottom: 8,
-  },
-  fileItemDark: {
-    backgroundColor: '#374151',
-  },
-  fileName: {
-    flex: 1,
-    marginLeft: 8,
-    fontSize: 14,
-    color: '#374151',
-  },
-  fileNameDark: {
-    color: '#D1D5DB',
-  },
-  skipButton: {
-    alignItems: 'center',
-    paddingVertical: 16,
-    marginTop: 16,
-  },
-  skipButtonText: {
-    fontSize: 16,
-    color: '#6B7280',
-    fontWeight: '500',
-  },
-  skipButtonTextDark: {
-    color: '#9CA3AF',
-  },
-  navigationContainer: {
-    paddingHorizontal: 20,
-    paddingVertical: 16,
-    backgroundColor: '#FFFFFF',
-    borderTopWidth: 1,
-    borderTopColor: '#E5E7EB',
-  },
-  navigationContainerDark: {
-    backgroundColor: '#1F2937',
-    borderTopColor: '#374151',
-  },
-  nextButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: '#556B2F',
-    paddingVertical: 16,
-    borderRadius: 12,
-  },
-  nextButtonText: {
-    color: '#FFFFFF',
-    fontSize: 16,
-    fontWeight: '600',
-    marginRight: 8,
-  },
-  finishButton: {
-    backgroundColor: '#556B2F',
-    paddingVertical: 16,
-    borderRadius: 12,
-    alignItems: 'center',
-  },
-  finishButtonText: {
-    color: '#FFFFFF',
-    fontSize: 16,
-    fontWeight: '600',
-  },
+  container: { flex: 1, backgroundColor: '#F9FAFB' },
+  containerDark: { flex: 1, backgroundColor: '#111827' },
+  loadingOverlay: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0, 0, 0, 0.5)', justifyContent: 'center', alignItems: 'center', zIndex: 1000 },
+  loadingContent: { backgroundColor: '#FFFFFF', padding: 30, borderRadius: 16, alignItems: 'center' },
+  loadingContentDark: { backgroundColor: '#1F2937' },
+  loadingText: { marginTop: 16, fontSize: 18, fontWeight: '600', color: '#1F2937' },
+  loadingTextDark: { color: '#F9FAFB' },
+  header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 20, paddingVertical: 16, backgroundColor: '#FFFFFF', borderBottomWidth: 1, borderBottomColor: '#E5E7EB' },
+  headerDark: { backgroundColor: '#1F2937', borderBottomColor: '#374151' },
+  backButton: { padding: 8 },
+  headerTitle: { fontSize: 18, fontWeight: '600', color: '#1F2937' },
+  headerTitleDark: { color: '#F9FAFB' },
+  headerRight: { width: 40 },
+  progressContainer: { paddingHorizontal: 20, paddingVertical: 16, backgroundColor: '#FFFFFF' },
+  progressContainerDark: { backgroundColor: '#1F2937' },
+  progressBar: { height: 8, backgroundColor: '#E5E7EB', borderRadius: 4, overflow: 'hidden' },
+  progressFill: { height: '100%', backgroundColor: '#556B2F', borderRadius: 4 },
+  progressText: { marginTop: 8, fontSize: 14, color: '#6B7280', textAlign: 'center' },
+  progressTextDark: { color: '#D1D5DB' },
+  content: { flex: 1, paddingHorizontal: 20, paddingVertical: 24 },
+  questionScrollView: { flex: 1 },
+  questionScrollContent: { flexGrow: 1 },
+  questionContainer: { backgroundColor: '#FFFFFF', borderRadius: 16, padding: 24, marginBottom: 20, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.1, shadowRadius: 8, elevation: 4 },
+  questionContainerDark: { backgroundColor: '#1F2937' },
+  questionText: { fontSize: 20, fontWeight: '600', color: '#1F2937', marginBottom: 24, lineHeight: 28 },
+  questionTextDark: { color: '#F9FAFB' },
+  textInput: { borderWidth: 1, borderColor: '#E5E7EB', borderRadius: 12, paddingHorizontal: 16, paddingVertical: 12, fontSize: 16, color: '#1F2937', backgroundColor: '#FFFFFF' },
+  textInputDark: { borderColor: '#374151', color: '#F9FAFB', backgroundColor: '#374151' },
+  optionsContainer: { gap: 12 },
+  optionButton: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16, paddingVertical: 12, borderWidth: 1, borderColor: '#E5E7EB', borderRadius: 12, backgroundColor: '#FFFFFF' },
+  optionButtonDark: { borderColor: '#374151', backgroundColor: '#374151' },
+  selectedOption: { borderColor: '#556B2F', backgroundColor: '#F0FDF4' },
+  optionText: { fontSize: 16, color: '#374151', flex: 1 },
+  optionTextDark: { color: '#D1D5DB' },
+  selectedOptionText: { color: '#556B2F', fontWeight: '600' },
+  cvContainer: { backgroundColor: '#FFFFFF', borderRadius: 16, padding: 24, marginBottom: 20, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.1, shadowRadius: 8, elevation: 4 },
+  cvContainerDark: { backgroundColor: '#1F2937' },
+  uploadButton: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', paddingVertical: 16, paddingHorizontal: 24, borderWidth: 2, borderColor: '#556B2F', borderStyle: 'dashed', borderRadius: 12, marginVertical: 16 },
+  uploadButtonText: { marginLeft: 8, fontSize: 16, color: '#556B2F', fontWeight: '600' },
+  filesContainer: { marginTop: 20 },
+  filesTitle: { fontSize: 16, fontWeight: '600', color: '#1F2937', marginBottom: 12 },
+  filesTitleDark: { color: '#F9FAFB' },
+  fileItem: { flexDirection: 'row', alignItems: 'center', paddingVertical: 8, paddingHorizontal: 12, backgroundColor: '#F9FAFB', borderRadius: 8, marginBottom: 8 },
+  fileItemDark: { backgroundColor: '#374151' },
+  fileName: { flex: 1, marginLeft: 8, fontSize: 14, color: '#374151' },
+  fileNameDark: { color: '#D1D5DB' },
+  skipButton: { alignItems: 'center', paddingVertical: 16, marginTop: 16 },
+  skipButtonText: { fontSize: 16, color: '#6B7280', fontWeight: '500' },
+  skipButtonTextDark: { color: '#9CA3AF' },
+  navigationContainer: { paddingHorizontal: 20, paddingVertical: 16, backgroundColor: '#FFFFFF', borderTopWidth: 1, borderTopColor: '#E5E7EB' },
+  navigationContainerDark: { backgroundColor: '#1F2937', borderTopColor: '#374151' },
+  nextButton: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', backgroundColor: '#556B2F', paddingVertical: 16, borderRadius: 12 },
+  nextButtonText: { color: '#FFFFFF', fontSize: 16, fontWeight: '600', marginRight: 8 },
+  finishButton: { backgroundColor: '#556B2F', paddingVertical: 16, borderRadius: 12, alignItems: 'center' },
+  finishButtonText: { color: '#FFFFFF', fontSize: 16, fontWeight: '600' },
 });
 
 export default QuestionnaireScreen;
