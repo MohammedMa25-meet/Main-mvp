@@ -6,14 +6,17 @@ const JSEARCH_API_KEY = 'ce730dd6c4mshfc23865116522b3p13e9bbjsn7f26457d877f';
 const JSEARCH_API_HOST = 'jsearch.p.rapidapi.com';
 
 /**
- * Searches for jobs using the Jsearch API.
+ * Searches for jobs using the Jsearch API with specific parameters.
  * @param {string} searchKeywords - The job title or keywords to search for.
  * @returns {Promise<Array>} - A promise that resolves with a list of job objects.
  */
 export const fetchJobs = async (searchKeywords) => {
-  console.log(`Job Service: Searching for jobs related to "${searchKeywords}"...`);
-  // We will search for jobs in the Middle East, you can change the country codes
-  const apiUrl = `https://jsearch.p.rapidapi.com/search?query=${encodeURIComponent(searchKeywords)}&location=AE,SA,QA,KW,OM,BH`;
+  console.log(`Job Service: Searching for jobs related to "${searchKeywords}" in Gulf & Remote...`);
+  
+  // ✅ --- THIS IS THE FIX --- ✅
+  // We've updated the query to be more specific and added 'remote_jobs_only'.
+  const query = `${searchKeywords} in UAE, Saudi Arabia, Qatar, Kuwait, Oman, Bahrain`;
+  const apiUrl = `https://jsearch.p.rapidapi.com/search?query=${encodeURIComponent(query)}&remote_jobs_only=true`;
 
   const options = {
     method: 'GET',
@@ -35,17 +38,19 @@ export const fetchJobs = async (searchKeywords) => {
       return [];
     }
 
-    // Clean up the job data into a format our app can use
+    // The data mapping remains the same
     const jobs = data.data.map(job => ({
       id: job.job_id,
       title: job.job_title,
-      company: job.employer_name,
-      location: job.job_city ? `${job.job_city}, ${job.job_country}` : job.job_country,
-      description: job.job_description,
+      company: job.employer_name || 'N/A',
+      location: job.job_city ? `${job.job_city}, ${job.job_country}` : 'Remote',
+      description: job.job_description || 'No description provided.',
       image: job.employer_logo,
       job_url: job.job_apply_link,
+      workType: job.job_employment_type || 'Full-time',
+      // ... other fields
     }));
-
+    
     return jobs;
 
   } catch (error) {

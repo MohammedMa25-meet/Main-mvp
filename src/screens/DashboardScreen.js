@@ -11,8 +11,6 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import JobDetailModal from '../components/JobDetailModal';
-import CourseDetailModal from '../components/CourseDetailModal';
 import { useDarkMode } from '../context/DarkModeContext';
 import { useUser } from '../context/UserContext';
 import { useLanguage } from '../context/LanguageContext';
@@ -23,10 +21,6 @@ const HomepageScreen = ({ navigation, onScreenChange }) => {
   const { t } = useLanguage();
   const [activeTab, setActiveTab] = useState('Courses');
   const [showSidebar, setShowSidebar] = useState(false);
-  const [selectedJob, setSelectedJob] = useState(null);
-  const [selectedCourse, setSelectedCourse] = useState(null);
-  const [showJobModal, setShowJobModal] = useState(false);
-  const [showCourseModal, setShowCourseModal] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
 
   const [courses, setCourses] = useState([]);
@@ -34,9 +28,6 @@ const HomepageScreen = ({ navigation, onScreenChange }) => {
 
   useEffect(() => {
     if (userData) {
-      // ✅ --- THIS IS THE FIX --- ✅
-      // We add .filter(item => item && item.id) to safely remove any bad data
-      // that might have been saved to the user's profile, preventing the crash.
       setCourses((userData.recommendedCourses || []).filter(c => c && c.id));
       setJobs((userData.recommendedJobs || []).filter(j => j && j.id));
     }
@@ -56,7 +47,6 @@ const HomepageScreen = ({ navigation, onScreenChange }) => {
       const updatedUserData = { ...userData, recommendedCourses, recommendedJobs, lastAnalysisDate: new Date() };
       updateUserData(updatedUserData);
 
-      // Also apply the safety filter here
       setCourses((recommendedCourses || []).filter(c => c && c.id));
       setJobs((recommendedJobs || []).filter(j => j && j.id));
 
@@ -70,8 +60,15 @@ const HomepageScreen = ({ navigation, onScreenChange }) => {
   };
 
   const handleMenuPress = () => setShowSidebar(!showSidebar);
-  const handleJobPress = (job) => { setSelectedJob(job); setShowJobModal(true); };
-  const handleCoursePress = (course) => { setSelectedCourse(course); setShowCourseModal(true); };
+  
+  // ✅ Updated handlers to navigate to the new detail screens
+  const handleJobPress = (job) => {
+    navigation.navigate('JobDetails', { job: job });
+  };
+  const handleCoursePress = (course) => {
+    navigation.navigate('CourseDetail', { course: course });
+  };
+
   const handleProfilePress = () => { setShowSidebar(false); if (onScreenChange) onScreenChange('Profile'); };
   const handleSettingsPress = () => { setShowSidebar(false); if (onScreenChange) onScreenChange('Settings'); };
   const handleLogout = () => {
@@ -121,9 +118,6 @@ const HomepageScreen = ({ navigation, onScreenChange }) => {
           )}
         </ScrollView>
       </View>
-
-      <JobDetailModal visible={showJobModal} job={selectedJob} onClose={() => setShowJobModal(false)} />
-      <CourseDetailModal visible={showCourseModal} course={selectedCourse} onClose={() => setShowCourseModal(false)} />
     </SafeAreaView>
   );
 };

@@ -5,43 +5,59 @@ const getPlaceholderImage = (keywords) => {
 };
 
 /**
- * Fetches real course data from a new, stable, free course API.
+ * Fetches real course data from the Microsoft Learn Catalog API.
  * @param {string} searchKeywords - The keywords to search for.
  * @returns {Promise<Array>} - A promise that resolves with a list of course objects.
  */
-export const fetchCourses = async (searchKeywords) => {
-  console.log(`Course Service: Searching for real courses about "${searchKeywords}"...`);
-  // ✅ This is a new, reliable, free API for course data
-  const apiUrl = `https://test-api.classpert.com/v1/courses?query=${encodeURIComponent(searchKeywords)}`;
-
+export const fetchCourses = async (searchKeywords = '') => {
   try {
-    const response = await fetch(apiUrl);
-    if (!response.ok) {
-      throw new Error(`Course API responded with status: ${response.status}`);
-    }
-    const data = await response.json();
+    const baseUrl = 'https://learn.microsoft.com/api/catalog/';
+    const params = new URLSearchParams({
+      locale: 'en-us',
+      type: 'modules,learningPaths',
+      '$top': '100' // Request up to 100 items from the API
+    });
 
-    if (!data.courses || !Array.isArray(data.courses)) {
-      console.warn("Course API did not return a valid 'courses' array.");
-      return [];
+    console.log(`🔍 Fetching courses for: "${searchKeywords}"`);
+    const response = await fetch(`${baseUrl}?${params.toString()}`);
+
+    if (!response.ok) {
+      throw new Error(`Catalog API failed with status ${response.status}`);
     }
-    
-    // Clean up the data into the format our app expects
-    const courses = data.courses.map(course => ({
-      id: course._id, // Use the unique ID from the API
-      title: course.title,
-      provider: course.creators || 'Online Platform',
-      description: `A course on ${course.title}.`, // The API doesn't provide descriptions, so we create one.
-      image: getPlaceholderImage(searchKeywords), // The API doesn't provide images
-      level: course.level || 'All Levels',
-      duration: course.duration ? `${Math.round(course.duration / 3600)} hours` : 'Self-paced',
-      course_url: course.url,
+
+    const catalogData = await response.json();
+
+    const allCoursesArray = [
+      ...(catalogData.modules || []),
+      ...(catalogData.learningPaths || [])
+    ];
+
+    const keywords = searchKeywords.toLowerCase().split(' ').filter(Boolean);
+
+    // Filter the full list of courses based on the user's interests
+    const filteredCourses = allCoursesArray.filter(item =>
+      keywords.length === 0 ||
+      keywords.some(kw =>
+        (item.title || '').toLowerCase().includes(kw) ||
+        (item.summary || '').toLowerCase().includes(kw) ||
+        (item.roles || []).join(' ').toLowerCase().includes(kw)
+      )
+    );
+
+    // Map the filtered data to the clean format our app uses
+    return filteredCourses.map(item => ({
+      id: item.uid,
+      title: item.title,
+      provider: 'Microsoft Learn',
+      description: item.summary || 'No description available',
+      image: item.icon_url || getPlaceholderImage(searchKeywords || 'tech'),
+      level: (item.levels || []).join(', ') || 'All Levels',
+      duration: '', // Duration is not available in this API
+      course_url: `https://learn.microsoft.com${item.url}`
     }));
-    
-    return courses;
 
   } catch (error) {
-    console.error("Failed to fetch from Course API:", error);
-    return [];
+    console.error('❌ Error fetching courses:', error.message);
+    return []; // Return an empty array on error
   }
 };
