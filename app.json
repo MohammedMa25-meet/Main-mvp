@@ -15,13 +15,15 @@
       "**/*"
     ],
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.yourname.bridgeit"
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#556B2F"
-      }
+      },
+      "package": "com.myandroid.bridgeit"
     },
     "web": {
       "favicon": "./assets/favicon.png"

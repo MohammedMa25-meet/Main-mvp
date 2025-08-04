@@ -15,11 +15,12 @@ import * as DocumentPicker from 'expo-document-picker';
 import { useDarkMode } from '../context/DarkModeContext';
 import { useLanguage } from '../context/LanguageContext';
 import { useUser } from '../context/UserContext';
+
 // Import all necessary services
 import { db } from '../services/firebase';
-import { doc, setDoc, updateDoc } from 'firebase/firestore';
-import { fetchCourses } from '../services/courseService';
-import { getAiRecommendations } from '../services/aiService';
+import { doc, setDoc } from 'firebase/firestore';
+import { uploadFile } from '../services/appwriteService'; // For CV Uploads
+import { runFullAiAnalysis } from '../services/aiService'; // The main AI "Orchestrator"
 
 const QuestionnaireScreen = ({ navigation, route }) => {
   const [currentPage, setCurrentPage] = useState(0);
@@ -104,7 +105,7 @@ const QuestionnaireScreen = ({ navigation, route }) => {
   }, []);
 
   const handleAnswer = (questionId, answer) => {
-    if (questions[currentPage].type === 'multiple') {
+    if (questions[currentPage]?.type === 'multiple') {
       const currentAnswers = answers[questionId] || [];
       const newAnswers = currentAnswers.includes(answer)
         ? currentAnswers.filter(a => a !== answer)
@@ -116,17 +117,18 @@ const QuestionnaireScreen = ({ navigation, route }) => {
   };
 
   const handleNext = () => {
-    const currentQuestion = questions[currentPage];
-    const currentAnswer = answers[currentQuestion.id];
+    // Navigate to CV upload page after last question
+    if (currentPage >= questions.length - 1) {
+        setCurrentPage(currentPage + 1);
+        return;
+    }
 
-    if (!currentAnswer || (Array.isArray(currentAnswer) && currentAnswer.length === 0)) {
+    const currentQuestion = questions[currentPage];
+    if (!answers[currentQuestion.id] || (Array.isArray(answers[currentQuestion.id]) && answers[currentQuestion.id].length === 0)) {
       Alert.alert(t('Error'), t('Please answer the question before continuing.'));
       return;
     }
-
-    if (currentPage < questions.length) {
-      setCurrentPage(currentPage + 1);
-    }
+    setCurrentPage(currentPage + 1);
   };
 
   const handleBack = () => {
@@ -168,50 +170,52 @@ const QuestionnaireScreen = ({ navigation, route }) => {
 
   const handleFinish = async () => {
     setLoading(true);
-
-    const finalUserData = {
-      ...initialUserData,
-      ...answers,
-      uid: userAuth.uid,
-      email: userAuth.email,
-      cvUrls: [],
-      createdAt: new Date(),
-    };
-    delete finalUserData.cvFiles;
+    let cvUrls = [];
 
     try {
+      setLoadingText(t('Uploading documents...'));
+      // 1. Upload CV files to Appwrite if they exist
+      if (answers.cvFiles.length > 0) {
+        const uploadPromises = answers.cvFiles.map(file => uploadFile(file, userAuth.uid));
+        cvUrls = await Promise.all(uploadPromises);
+      }
+
+      // 2. Prepare the complete user profile
+      const finalUserData = {
+        ...initialUserData,
+        ...answers,
+        uid: userAuth.uid,
+        email: userAuth.email,
+        cvUrls: cvUrls, // Store the array of URLs from Appwrite
+        createdAt: new Date(),
+      };
+      delete finalUserData.cvFiles; // Clean up local file info
+
       setLoadingText(t('Saving your profile...'));
+      // 3. Save the initial profile to Firestore
       const userDocRef = doc(db, 'users', userAuth.uid);
       await setDoc(userDocRef, finalUserData);
       console.log('User profile created in Firestore successfully!');
 
-      setLoadingText(t('Finding courses...'));
-      const searchKeywords = finalUserData.field.join(' ') || 'professional development';
-      const courseCatalog = await fetchCourses(searchKeywords);
-
-      if (courseCatalog && courseCatalog.length > 0) {
-        setLoadingText(t('AI is analyzing your profile...'));
-        const recommendedCourses = await getAiRecommendations(finalUserData, courseCatalog);
-
-        await updateDoc(userDocRef, {
-          recommendedCourses: recommendedCourses,
-          analysisComplete: true,
-        });
-
-        updateUserData({ ...finalUserData, recommendedCourses, analysisComplete: true });
-      } else {
-        console.log("No courses found to analyze. Skipping AI recommendations.");
-        updateUserData(finalUserData);
-      }
-
+      setLoadingText(t('AI is analyzing your profile... This may take a moment.'));
+      // 4. Call the full AI analysis orchestrator. It handles everything else.
+      const { recommendedCourses, recommendedJobs } = await runFullAiAnalysis(finalUserData);
+      
+      // 5. Update the global context with the final, complete user data
+      const completeUserData = { ...finalUserData, recommendedCourses, recommendedJobs, analysisComplete: true, lastAnalysisDate: new Date() };
+      updateUserData(completeUserData);
+      
       setLoading(false);
       Alert.alert(t('Success'), t('Registration completed successfully!'), [
         { text: t('OK'), onPress: () => navigation.navigate('MainScreen') }
       ]);
+
     } catch (error) {
       setLoading(false);
       console.error('Error during final registration step:', error);
-      Alert.alert(t('Error'), t('There was a problem saving your profile.'));
+      Alert.alert(t('Error'), t('There was a problem saving your profile. We will try to generate recommendations later.'));
+      // Still navigate to the main screen even if AI fails, so the user isn't stuck
+      navigation.navigate('MainScreen');
     }
   };
 
@@ -219,48 +223,18 @@ const QuestionnaireScreen = ({ navigation, route }) => {
     if (currentPage < questions.length) {
       const question = questions[currentPage];
       const currentAnswer = answers[question.id];
-
       return (
-        <ScrollView
-          style={styles.questionScrollView}
-          showsVerticalScrollIndicator={true}
-          contentContainerStyle={styles.questionScrollContent}
-        >
+        <ScrollView style={styles.questionScrollView} contentContainerStyle={styles.questionScrollContent}>
           <View style={[styles.questionContainer, isDarkMode && styles.questionContainerDark]}>
             <Text style={[styles.questionText, isDarkMode && styles.questionTextDark]}>{question.question}</Text>
-
             {question.type === 'text' ? (
-              <TextInput
-                style={[styles.textInput, isDarkMode && styles.textInputDark]}
-                placeholder={question.placeholder}
-                placeholderTextColor={isDarkMode ? '#9CA3AF' : '#9CA3AF'}
-                value={currentAnswer || ''}
-                onChangeText={(text) => handleAnswer(question.id, text)}
-              />
+              <TextInput style={[styles.textInput, isDarkMode && styles.textInputDark]} placeholder={question.placeholder} placeholderTextColor={isDarkMode ? '#9CA3AF' : '#9CA3AF'} value={currentAnswer || ''} onChangeText={(text) => handleAnswer(question.id, text)} />
             ) : (
               <View style={styles.optionsContainer}>
                 {question.options.map((option, index) => (
-                  <TouchableOpacity
-                    key={index}
-                    style={[
-                      styles.optionButton,
-                      isDarkMode && styles.optionButtonDark,
-                      question.type === 'single' && currentAnswer === option && styles.selectedOption,
-                      question.type === 'multiple' && currentAnswer?.includes(option) && styles.selectedOption,
-                    ]}
-                    onPress={() => handleAnswer(question.id, option)}
-                  >
-                    <Text style={[
-                      styles.optionText,
-                      isDarkMode && styles.optionTextDark,
-                      question.type === 'single' && currentAnswer === option && styles.selectedOptionText,
-                      question.type === 'multiple' && currentAnswer?.includes(option) && styles.selectedOptionText,
-                    ]}>
-                      {option}
-                    </Text>
-                    {question.type === 'multiple' && currentAnswer?.includes(option) && (
-                      <Ionicons name="checkmark-circle" size={20} color="#556B2F" />
-                    )}
+                  <TouchableOpacity key={index} style={[styles.optionButton, isDarkMode && styles.optionButtonDark, (question.type === 'single' && currentAnswer === option) && styles.selectedOption, (question.type === 'multiple' && currentAnswer?.includes(option)) && styles.selectedOption]} onPress={() => handleAnswer(question.id, option)}>
+                    <Text style={[styles.optionText, isDarkMode && styles.optionTextDark, (question.type === 'single' && currentAnswer === option) && styles.selectedOptionText, (question.type === 'multiple' && currentAnswer?.includes(option)) && styles.selectedOptionText]}>{option}</Text>
+                    {question.type === 'multiple' && currentAnswer?.includes(option) && (<Ionicons name="checkmark-circle" size={20} color="#556B2F" />)}
                   </TouchableOpacity>
                 ))}
               </View>
@@ -269,34 +243,12 @@ const QuestionnaireScreen = ({ navigation, route }) => {
         </ScrollView>
       );
     } else {
-      // CV Upload Page
       return (
         <View style={[styles.cvContainer, isDarkMode && styles.cvContainerDark]}>
           <Text style={[styles.questionText, isDarkMode && styles.questionTextDark]}>{t('Please enter your credentials and resume')}</Text>
-
-          <TouchableOpacity style={styles.uploadButton} onPress={handleFileUpload}>
-            <Ionicons name="cloud-upload-outline" size={24} color="#10B981" />
-            <Text style={styles.uploadButtonText}>{t('Upload CV/Resume')}</Text>
-          </TouchableOpacity>
-
-          {answers.cvFiles.length > 0 && (
-            <View style={styles.filesContainer}>
-              <Text style={[styles.filesTitle, isDarkMode && styles.filesTitleDark]}>{t('Uploaded Files:')}</Text>
-              {answers.cvFiles.map((file, index) => (
-                <View key={index} style={[styles.fileItem, isDarkMode && styles.fileItemDark]}>
-                  <Ionicons name="document-outline" size={20} color="#6B7280" />
-                  <Text style={[styles.fileName, isDarkMode && styles.fileNameDark]} numberOfLines={1}>{file.name}</Text>
-                  <TouchableOpacity onPress={() => handleRemoveFile(index)}>
-                    <Ionicons name="close-circle" size={20} color="#EF4444" />
-                  </TouchableOpacity>
-                </View>
-              ))}
-            </View>
-          )}
-
-          <TouchableOpacity style={styles.skipButton} onPress={handleSkipCV}>
-            <Text style={[styles.skipButtonText, isDarkMode && styles.skipButtonTextDark]}>{t('Skip CV Upload')}</Text>
-          </TouchableOpacity>
+          <TouchableOpacity style={styles.uploadButton} onPress={handleFileUpload}><Ionicons name="cloud-upload-outline" size={24} color="#10B981" /><Text style={styles.uploadButtonText}>{t('Upload CV/Resume')}</Text></TouchableOpacity>
+          {answers.cvFiles.length > 0 && (<View style={styles.filesContainer}><Text style={[styles.filesTitle, isDarkMode && styles.filesTitleDark]}>{t('Uploaded Files:')}</Text>{answers.cvFiles.map((file, index) => (<View key={index} style={[styles.fileItem, isDarkMode && styles.fileItemDark]}><Ionicons name="document-outline" size={20} color="#6B7280" /><Text style={[styles.fileName, isDarkMode && styles.fileNameDark]} numberOfLines={1}>{file.name}</Text><TouchableOpacity onPress={() => handleRemoveFile(index)}><Ionicons name="close-circle" size={20} color="#EF4444" /></TouchableOpacity></View>))}</View>)}
+          <TouchableOpacity style={styles.skipButton} onPress={handleSkipCV}><Text style={[styles.skipButtonText, isDarkMode && styles.skipButtonTextDark]}>{t('Skip CV Upload')}</Text></TouchableOpacity>
         </View>
       );
     }
@@ -310,46 +262,22 @@ const QuestionnaireScreen = ({ navigation, route }) => {
 
   return (
     <SafeAreaView style={containerStyle}>
-      {loading && (
-        <View style={styles.loadingOverlay}>
-          <View style={[styles.loadingContent, isDarkMode && styles.loadingContentDark]}>
-            <ActivityIndicator size="large" color="#556B2F" />
-            <Text style={[styles.loadingText, isDarkMode && styles.loadingTextDark]}>{loadingText}</Text>
-          </View>
-        </View>
-      )}
-
+      {loading && (<View style={styles.loadingOverlay}><View style={[styles.loadingContent, isDarkMode && styles.loadingContentDark]}><ActivityIndicator size="large" color="#556B2F" /><Text style={[styles.loadingText, isDarkMode && styles.loadingTextDark]}>{loadingText}</Text></View></View>)}
       <View style={headerStyle}>
-        <TouchableOpacity style={styles.backButton} onPress={handleBack}>
-          <Ionicons name="arrow-back" size={24} color={isDarkMode ? "#FFFFFF" : "#1F2937"} />
-        </TouchableOpacity>
-        <Text style={[styles.headerTitle, isDarkMode && styles.headerTitleDark]}>
-          {currentPage < questions.length ? t('Questionnaire') : t('CV Upload')}
-        </Text>
+        <TouchableOpacity style={styles.backButton} onPress={handleBack}><Ionicons name="arrow-back" size={24} color={isDarkMode ? "#FFFFFF" : "#1F2937"} /></TouchableOpacity>
+        <Text style={[styles.headerTitle, isDarkMode && styles.headerTitleDark]}>{currentPage < questions.length ? t('Questionnaire') : t('CV Upload')}</Text>
         <View style={styles.headerRight} />
       </View>
-
       <View style={progressContainerStyle}>
-        <View style={styles.progressBar}>
-          <View style={[styles.progressFill, { width: `${progress}%` }]} />
-        </View>
+        <View style={styles.progressBar}><View style={[styles.progressFill, { width: `${progress}%` }]} /></View>
         <Text style={progressTextStyle}>{Math.round(progress)}% {t('Complete')}</Text>
       </View>
-
-      <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
-        {renderQuestion()}
-      </ScrollView>
-
+      <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>{renderQuestion()}</ScrollView>
       <View style={navigationContainerStyle}>
-        {currentPage < totalQuestions ? (
-          <TouchableOpacity style={styles.nextButton} onPress={handleNext}>
-            <Text style={styles.nextButtonText}>{t('Next')}</Text>
-            <Ionicons name="arrow-forward" size={20} color="#FFFFFF" />
-          </TouchableOpacity>
+        {currentPage < totalQuestions - 1 ? (
+          <TouchableOpacity style={styles.nextButton} onPress={handleNext}><Text style={styles.nextButtonText}>{t('Next')}</Text><Ionicons name="arrow-forward" size={20} color="#FFFFFF" /></TouchableOpacity>
         ) : (
-          <TouchableOpacity style={styles.finishButton} onPress={handleFinish}>
-            <Text style={styles.finishButtonText}>{t('Finish Registration')}</Text>
-          </TouchableOpacity>
+          <TouchableOpacity style={styles.finishButton} onPress={handleFinish}><Text style={styles.finishButtonText}>{t('Finish Registration')}</Text></TouchableOpacity>
         )}
       </View>
     </SafeAreaView>
