@@ -27,6 +27,25 @@ import { runFullAiAnalysis } from '../services/aiService';
 
 const QuestionnaireScreen = ({ navigation, route }) => {
   const [currentPage, setCurrentPage] = useState(0);
+  
+  // Reset to first question when component mounts or when retaking
+  useEffect(() => {
+    setCurrentPage(0);
+    setShowIntro(true);
+    setAnswers({
+      careerGoal: '',
+      region: '',
+      employmentStatus: '',
+      experience: '',
+      university: '',
+      fieldExperience: [],
+      desiredField: [],
+      dreamJob: '',
+      remoteCountries: [],
+      cvFiles: [],
+      profilePhoto: null, // Add profile photo state
+    });
+  }, []);
   const [loading, setLoading] = useState(false);
   const [loadingText, setLoadingText] = useState('');
   const [showIntro, setShowIntro] = useState(true);
@@ -43,6 +62,7 @@ const QuestionnaireScreen = ({ navigation, route }) => {
     dreamJob: '',
     remoteCountries: [],
     cvFiles: [],
+    profilePhoto: null, // Add profile photo state
   });
 
   const { isDarkMode } = useDarkMode();
@@ -253,31 +273,49 @@ const QuestionnaireScreen = ({ navigation, route }) => {
   }, []);
 
   const handleAnswer = (questionId, answer, subOption = null) => {
+    console.log('handleAnswer called:', { questionId, answer, subOption, currentAnswers: answers[questionId] });
+    
     if (questions[currentPage]?.type === 'multiple') {
-      // Ensure currentAnswers is always an array
-      const currentAnswers = Array.isArray(answers[questionId]) ? answers[questionId] : [];
-      let newAnswers;
+      // Check if this is an object option (has sub-options)
+      const currentQuestion = questions[currentPage];
+      const isObjectOption = currentQuestion.options.some(opt => typeof opt === 'object' && opt.label === answer);
       
-      if (subOption) {
-        // Handle sub-options
-        const optionKey = answer;
-        const currentSubAnswers = Array.isArray(currentAnswers[optionKey]) ? currentAnswers[optionKey] : [];
-        const updatedSubAnswers = currentSubAnswers.includes(subOption)
-          ? currentSubAnswers.filter(a => a !== subOption)
-          : [...currentSubAnswers, subOption];
+      if (isObjectOption) {
+        // Handle object options (like ICT with sub-options)
+        const currentAnswers = typeof answers[questionId] === 'object' ? answers[questionId] : {};
         
-        newAnswers = {
-          ...currentAnswers,
-          [optionKey]: updatedSubAnswers
-        };
+        if (subOption) {
+          // Handle sub-options
+          const currentSubAnswers = Array.isArray(currentAnswers[answer]) ? currentAnswers[answer] : [];
+          const updatedSubAnswers = currentSubAnswers.includes(subOption)
+            ? currentSubAnswers.filter(a => a !== subOption)
+            : [...currentSubAnswers, subOption];
+          
+          const newAnswers = {
+            ...currentAnswers,
+            [answer]: updatedSubAnswers
+          };
+          
+          console.log('Updated sub-options:', newAnswers);
+          setAnswers({ ...answers, [questionId]: newAnswers });
+        } else {
+          // Handle main object option selection
+          const newAnswers = currentAnswers[answer]
+            ? { ...currentAnswers }
+            : { ...currentAnswers, [answer]: [] };
+          
+          console.log('Updated main option:', newAnswers);
+          setAnswers({ ...answers, [questionId]: newAnswers });
+        }
       } else {
-        // Handle main options
-        newAnswers = currentAnswers.includes(answer)
+        // Handle string options (simple array)
+        const currentAnswers = Array.isArray(answers[questionId]) ? answers[questionId] : [];
+        const newAnswers = currentAnswers.includes(answer)
           ? currentAnswers.filter(a => a !== answer)
           : [...currentAnswers, answer];
+        
+        setAnswers({ ...answers, [questionId]: newAnswers });
       }
-      
-      setAnswers({ ...answers, [questionId]: newAnswers });
     } else {
       // For single choice questions, handle "Other" option specially
       if (answer === t('Other')) {
@@ -337,8 +375,18 @@ const QuestionnaireScreen = ({ navigation, route }) => {
   const handleFileUpload = async () => {
     try {
       const result = await DocumentPicker.getDocumentAsync({
-        type: ['application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'],
+        type: [
+          'application/pdf', 
+          'application/msword', 
+          'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+          'image/*', // Add support for images
+          'image/jpeg',
+          'image/png',
+          'image/gif',
+          'image/webp'
+        ],
         multiple: true,
+        copyToCacheDirectory: true, // Enable local caching
       });
 
       if (!result.canceled) {
@@ -346,11 +394,38 @@ const QuestionnaireScreen = ({ navigation, route }) => {
           name: file.name,
           uri: file.uri,
           size: file.size,
+          type: file.mimeType || 'application/octet-stream',
+          isImage: file.mimeType?.startsWith('image/') || false,
+          localPath: file.uri, // Store local path for offline access
         }));
         setAnswers({ ...answers, cvFiles: [...answers.cvFiles, ...newFiles] });
       }
     } catch (error) {
       Alert.alert(t('Error'), t('Failed to upload file. Please try again.'));
+    }
+  };
+
+  const handlePhotoUpload = async () => {
+    try {
+      const result = await DocumentPicker.getDocumentAsync({
+        type: ['image/*', 'image/jpeg', 'image/png', 'image/gif', 'image/webp'],
+        multiple: true,
+        copyToCacheDirectory: true,
+      });
+
+      if (!result.canceled) {
+        const newPhotos = result.assets.map(file => ({
+          name: file.name,
+          uri: file.uri,
+          size: file.size,
+          type: file.mimeType || 'image/jpeg',
+          isImage: true,
+          localPath: file.uri,
+        }));
+        setAnswers({ ...answers, cvFiles: [...answers.cvFiles, ...newPhotos] });
+      }
+    } catch (error) {
+      Alert.alert(t('Error'), t('Failed to upload photo. Please try again.'));
     }
   };
 
@@ -486,7 +561,17 @@ const QuestionnaireScreen = ({ navigation, route }) => {
                     const optionLabel = typeof option === 'object' ? option.label : option;
                     const isSelected = question.type === 'single' 
                       ? currentAnswer === optionLabel
-                      : (currentAnswer && Array.isArray(currentAnswer) && currentAnswer.includes(optionLabel));
+                      : typeof option === 'object' 
+                        ? (currentAnswer && typeof currentAnswer === 'object' && currentAnswer.hasOwnProperty(option.label))
+                        : (currentAnswer && Array.isArray(currentAnswer) && currentAnswer.includes(optionLabel));
+                    
+                    console.log('Rendering option:', { 
+                      optionLabel, 
+                      isSelected, 
+                      currentAnswer, 
+                      isObject: typeof option === 'object',
+                      hasProperty: currentAnswer && typeof currentAnswer === 'object' && currentAnswer.hasOwnProperty(option.label)
+                    });
                     
                     return (
                       <View key={index}>

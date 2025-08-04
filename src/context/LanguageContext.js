@@ -420,6 +420,23 @@ export const LanguageProvider = ({ children }) => {
     'Update your personal information': 'تحديث معلوماتك الشخصية',
     'Change Password': 'تغيير كلمة المرور',
     'Update your password': 'تحديث كلمة المرور',
+
+    // Profile Photo Upload
+    'Profile Photo': 'صورة الملف الشخصي',
+    'Choose how to update your profile photo': 'اختر كيفية تحديث صورة ملفك الشخصي',
+    'Take Photo': 'التقاط صورة',
+    'Choose from Gallery': 'اختيار من المعرض',
+    'Remove Photo': 'إزالة الصورة',
+    'Permission required': 'الإذن مطلوب',
+    'You need to allow access to your photos to upload an image.': 'تحتاج إلى السماح بالوصول إلى صورك لرفع صورة.',
+    'You need to allow access to your camera to take a photo.': 'تحتاج إلى السماح بالوصول إلى الكاميرا لالتقاط صورة.',
+    'Failed to pick image.': 'فشل في اختيار الصورة.',
+    'Failed to take photo.': 'فشل في التقاط الصورة.',
+    'Failed to save profile photo locally.': 'فشل في حفظ صورة الملف الشخصي محلياً.',
+    'Profile photo updated successfully!': 'تم تحديث صورة الملف الشخصي بنجاح!',
+    'Are you sure you want to remove your profile photo?': 'هل أنت متأكد من أنك تريد إزالة صورة ملفك الشخصي؟',
+    'Failed to remove profile photo.': 'فشل في إزالة صورة الملف الشخصي.',
+    'Profile photo removed!': 'تم إزالة صورة الملف الشخصي!',
   };
 
   const t = (key) => {

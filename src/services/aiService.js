@@ -33,43 +33,87 @@ const getAiRecommendations = async (userData, courseCatalog, jobListings) => {
     ? Object.keys(desiredField).join(', ')
     : desiredField;
   
+  // Create detailed analysis of user profile
+  const userProfile = {
+    careerGoal,
+    employmentStatus,
+    experience,
+    university,
+    fieldExperience: fieldExperienceStr,
+    desiredField: desiredFieldStr,
+    dreamJob,
+    remoteCountries: remoteCountries.join(', ')
+  };
+  
+  console.log('Detailed user profile for AI analysis:', userProfile);
+  
   const prompt = `
-    You are an expert career advisor specializing in the Middle East and North Africa region.
-    Analyze the user's profile and select the top 3 courses AND the top 3 jobs that are the best fit.
+    You are an expert career advisor specializing in the Middle East and North Africa region, particularly Palestine and the West Bank.
+    
+    Analyze the user's profile and select the top 3 courses AND the top 3 jobs that are the best fit for their specific situation.
+    
+    USER PROFILE ANALYSIS:
+    - Career Goal: "${careerGoal}" - This indicates their primary motivation
+    - Employment Status: "${employmentStatus}" - This shows their current situation
+    - Prior Experience: "${experience}" - This indicates their educational background
+    - University: "${university}" - This shows their academic institution
+    - Field Experience: "${fieldExperienceStr}" - This shows their practical experience areas
+    - Desired Work Fields: "${desiredFieldStr}" - This shows where they want to work
+    - Dream Job: "${dreamJob}" - This is their ultimate career goal
+    - Remote Work Countries: "${remoteCountries.join(', ')}" - This shows their geographic preferences
 
-    USER PROFILE:
-    - Career Goal: "${careerGoal}"
-    - Employment Status: "${employmentStatus}"
-    - Prior Experience: "${experience}"
-    - University: "${university}"
-    - Field Experience: "${fieldExperienceStr}"
-    - Desired Work Fields: "${desiredFieldStr}"
-    - Dream Job: "${dreamJob}"
-    - Remote Work Countries: "${remoteCountries.join(', ')}"
+    CONTEXT CONSIDERATIONS:
+    1. If they're unemployed, prioritize courses that lead to immediate employment
+    2. If they're employed but unsatisfied, focus on career advancement courses
+    3. If they have field experience, recommend jobs that build on that experience
+    4. If they have a dream job, recommend courses that directly support that goal
+    5. Consider the Palestinian context and regional opportunities
+    6. Focus on practical, skill-based courses that lead to tangible outcomes
+    7. Recommend jobs that match their experience level and desired fields
 
-    AVAILABLE COURSES (with their IDs):
+    AVAILABLE COURSES (with their IDs and categories):
     ---
-    ${JSON.stringify(courseCatalog.map(c => ({ id: c.id, title: c.title, provider: c.provider, skills: c.skills })))}
+    ${JSON.stringify(courseCatalog.map(c => ({ 
+      id: c.id, 
+      title: c.title, 
+      provider: c.provider, 
+      skills: c.skills,
+      category: c.category || 'General'
+    })))}
     ---
 
-    AVAILABLE JOBS (with their IDs):
+    AVAILABLE JOBS (with their IDs and categories):
     ---
-    ${JSON.stringify(jobListings.map(j => ({ id: j.id, title: j.title, company: j.company, category: j.category })))}
+    ${JSON.stringify(jobListings.map(j => ({ 
+      id: j.id, 
+      title: j.title, 
+      company: j.company, 
+      category: j.category,
+      level: j.level,
+      workType: j.workType
+    })))}
     ---
 
     INSTRUCTIONS:
-    Consider the user's background, goals, and regional context (West Bank/Palestine).
-    Focus on courses that will help them achieve their career goals and jobs that match their experience level.
-    Return a single, valid JSON object with two keys: "recommendedCourseIds" and "recommendedJobIds".
-    Each key must contain an array of the top 3 STRING IDs from the respective lists.
-    The output must be only the JSON object and nothing else.
+    1. Analyze the user's profile thoroughly
+    2. Match courses to their career goals and current situation
+    3. Match jobs to their experience level and desired fields
+    4. Consider regional context and opportunities
+    5. Prioritize practical, actionable recommendations
+    6. Return a single, valid JSON object with two keys: "recommendedCourseIds" and "recommendedJobIds"
+    7. Each key must contain an array of the top 3 STRING IDs from the respective lists
+    8. The output must be only the JSON object and nothing else
+    9. If no good matches exist, select the most relevant general options
   `;
 
   try {
     const result = await model.generateContent(prompt);
     const responseText = result.response.text();
     const cleanedResponse = responseText.replace(/```json/g, "").replace(/```/g, "").trim();
-    return JSON.parse(cleanedResponse);
+    const recommendations = JSON.parse(cleanedResponse);
+    
+    console.log('AI Recommendations:', recommendations);
+    return recommendations;
   } catch (error) {
     console.error("Gemini API Error:", error);
     // ✅ Return empty arrays on failure to prevent crashes

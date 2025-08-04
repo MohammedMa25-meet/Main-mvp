@@ -5,6 +5,7 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
+import * as FileSystem from 'expo-file-system';
 import { useDarkMode } from '../context/DarkModeContext';
 import { useUser } from '../context/UserContext';
 import { useLanguage } from '../context/LanguageContext';
@@ -21,6 +22,7 @@ const ProfileScreen = ({ navigation, onScreenChange }) => {
   const [isSaving, setIsSaving] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false); // For the refresh button
   const [editData, setEditData] = useState({});
+  const [isUploadingPhoto, setIsUploadingPhoto] = useState(false);
 
   const fullName = userData.firstName && userData.lastName ? `${userData.firstName} ${userData.lastName}` : t('User');
   const getUserInitial = () => fullName ? fullName.charAt(0).toUpperCase() : 'U';
@@ -34,23 +36,128 @@ const ProfileScreen = ({ navigation, onScreenChange }) => {
       }
 
       const result = await ImagePicker.launchImageLibraryAsync({
-        mediaTypes: ImagePicker.MediaTypeOptions.Images, allowsEditing: true, aspect: [1, 1], quality: 0.8,
+        mediaTypes: ImagePicker.MediaTypeOptions.Images, 
+        allowsEditing: true, 
+        aspect: [1, 1], 
+        quality: 0.8,
       });
 
       if (!result.canceled && result.assets[0]) {
-        const file = result.assets[0];
-        const fileName = file.uri.split('/').pop();
-        Alert.alert(t('Uploading...'), t('Your new profile picture is being uploaded.'));
-        const imageUrl = await uploadFile({ uri: file.uri, name: fileName }, userData.uid);
-        const userDocRef = doc(db, 'users', userData.uid);
-        await updateDoc(userDocRef, { profileImage: imageUrl });
-        updateUserData({ ...userData, profileImage: imageUrl });
-        Alert.alert(t('Success'), t('Profile image updated!'));
+        await uploadProfilePhotoLocally(result.assets[0]);
       }
     } catch (error) {
-      console.error("Image pick/upload error:", error);
-      Alert.alert(t('Error'), t('Failed to update profile image.'));
+      console.error("Image pick error:", error);
+      Alert.alert(t('Error'), t('Failed to pick image.'));
     }
+  };
+
+  const takePhoto = async () => {
+    try {
+      const permissionResult = await ImagePicker.requestCameraPermissionsAsync();
+      if (permissionResult.granted === false) {
+        Alert.alert(t('Permission required'), t('You need to allow access to your camera to take a photo.'));
+        return;
+      }
+
+      const result = await ImagePicker.launchCameraAsync({
+        allowsEditing: true,
+        aspect: [1, 1],
+        quality: 0.8,
+      });
+
+      if (!result.canceled && result.assets[0]) {
+        await uploadProfilePhotoLocally(result.assets[0]);
+      }
+    } catch (error) {
+      console.error("Camera error:", error);
+      Alert.alert(t('Error'), t('Failed to take photo.'));
+    }
+  };
+
+  const uploadProfilePhotoLocally = async (imageAsset) => {
+    setIsUploadingPhoto(true);
+    try {
+      // Create a unique filename
+      const timestamp = Date.now();
+      const fileName = `profile_${userData.uid}_${timestamp}.jpg`;
+      
+      // Create the local directory if it doesn't exist
+      const localDir = `${FileSystem.documentDirectory}profile_photos/`;
+      const dirInfo = await FileSystem.getInfoAsync(localDir);
+      if (!dirInfo.exists) {
+        await FileSystem.makeDirectoryAsync(localDir, { intermediates: true });
+      }
+
+      // Copy the image to local storage
+      const localUri = `${localDir}${fileName}`;
+      await FileSystem.copyAsync({
+        from: imageAsset.uri,
+        to: localUri
+      });
+
+      // Update user data with local photo path
+      const userDocRef = doc(db, 'users', userData.uid);
+      await updateDoc(userDocRef, { 
+        profileImage: localUri,
+        profileImageLocal: true // Flag to indicate this is a local image
+      });
+      
+      updateUserData({ 
+        ...userData, 
+        profileImage: localUri,
+        profileImageLocal: true
+      });
+      
+      Alert.alert(t('Success'), t('Profile photo updated successfully!'));
+    } catch (error) {
+      console.error("Local photo upload error:", error);
+      Alert.alert(t('Error'), t('Failed to save profile photo locally.'));
+    } finally {
+      setIsUploadingPhoto(false);
+    }
+  };
+
+  const removeProfilePhoto = async () => {
+    Alert.alert(
+      t('Remove Photo'), 
+      t('Are you sure you want to remove your profile photo?'), 
+      [
+        { text: t('Cancel'), style: 'cancel' },
+        {
+          text: t('Remove'),
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              // Delete local file if it exists
+              if (userData.profileImage && userData.profileImageLocal) {
+                const fileInfo = await FileSystem.getInfoAsync(userData.profileImage);
+                if (fileInfo.exists) {
+                  await FileSystem.deleteAsync(userData.profileImage);
+                }
+              }
+
+              // Update user data
+              const userDocRef = doc(db, 'users', userData.uid);
+              await updateDoc(userDocRef, { 
+                profileImage: null,
+                profileImageLocal: false
+              });
+              
+              updateUserData({ 
+                ...userData, 
+                profileImage: null,
+                profileImageLocal: false
+              });
+              
+              Alert.alert(t('Success'), t('Profile photo removed!'));
+            } catch (error) {
+              console.error("Remove photo error:", error);
+              Alert.alert(t('Error'), t('Failed to remove profile photo.'));
+            }
+          }
+        }
+      ]
+    );
   };
 
   const handleLogout = () => {
@@ -133,8 +240,39 @@ const ProfileScreen = ({ navigation, onScreenChange }) => {
     <SafeAreaView style={containerStyle}>
       <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
         <View style={[styles.header, isDarkMode && styles.headerDark]}>
-          <TouchableOpacity style={styles.menuButton} onPress={handleMenuPress}><Ionicons name="arrow-back" size={24} color={isDarkMode ? "#FFFFFF" : "#1F2937"} /></TouchableOpacity>
-          <View style={styles.userInfo}><TouchableOpacity style={styles.avatarContainer} onPress={pickImage}>{userData.profileImage ? <Image source={{ uri: userData.profileImage }} style={styles.avatarImage} /> : <View style={styles.avatar}><Text style={styles.avatarText}>{getUserInitial()}</Text></View>}<View style={styles.editImageButton}><Ionicons name="camera" size={12} color="#FFFFFF" /></View></TouchableOpacity><Text style={[styles.username, titleStyle]}>{fullName}</Text></View>
+          <TouchableOpacity style={styles.menuButton} onPress={handleMenuPress}>
+            <Ionicons name="arrow-back" size={24} color={isDarkMode ? "#FFFFFF" : "#1F2937"} />
+          </TouchableOpacity>
+          <View style={styles.userInfo}>
+            <TouchableOpacity style={styles.avatarContainer} onPress={() => {
+              Alert.alert(
+                t('Profile Photo'),
+                t('Choose how to update your profile photo'),
+                [
+                  { text: t('Cancel'), style: 'cancel' },
+                  { text: t('Take Photo'), onPress: takePhoto },
+                  { text: t('Choose from Gallery'), onPress: pickImage },
+                  ...(userData.profileImage ? [{ text: t('Remove Photo'), style: 'destructive', onPress: removeProfilePhoto }] : [])
+                ]
+              );
+            }}>
+              {userData.profileImage ? (
+                <Image source={{ uri: userData.profileImage }} style={styles.avatarImage} />
+              ) : (
+                <View style={styles.avatar}>
+                  <Text style={styles.avatarText}>{getUserInitial()}</Text>
+                </View>
+              )}
+              <View style={styles.editImageButton}>
+                {isUploadingPhoto ? (
+                  <ActivityIndicator size={12} color="#FFFFFF" />
+                ) : (
+                  <Ionicons name="camera" size={12} color="#FFFFFF" />
+                )}
+              </View>
+            </TouchableOpacity>
+            <Text style={[styles.username, titleStyle]}>{fullName}</Text>
+          </View>
         </View>
         <View style={styles.section}><View style={styles.sectionHeader}><View><Text style={[styles.sectionTitle, titleStyle]}>{t('Your Profile')}</Text><Text style={[styles.sectionSubtitle, textStyle]}>{t('Manage your information and preferences.')}</Text></View><TouchableOpacity style={styles.logoutButton} onPress={handleLogout}><Ionicons name="log-out-outline" size={20} color="#6B7280" /><Text style={styles.logoutText}>{t('Logout')}</Text></TouchableOpacity></View></View>
         <View style={[styles.card, cardStyle]}><View style={styles.cardHeader}><Text style={[styles.cardTitle, titleStyle]}>{t('Personal Details')}</Text><TouchableOpacity style={styles.editButton} onPress={handleEdit}><Ionicons name="pencil-outline" size={16} color="#6B7280" /><Text style={styles.editText}>{t('Edit')}</Text></TouchableOpacity></View><View style={styles.detailsGrid}><View style={styles.detailItem}><Text style={[styles.detailLabel, textStyle]}>{t('Full Name')}</Text><Text style={[styles.detailValue, titleStyle]}>{fullName}</Text></View><View style={styles.detailItem}><Text style={[styles.detailLabel, textStyle]}>{t('Email')}</Text><Text style={[styles.detailValue, titleStyle]}>{userData.email || t('Not specified')}</Text></View><View style={styles.detailItem}><Text style={[styles.detailLabel, textStyle]}>{t('Phone')}</Text><Text style={[styles.detailValue, titleStyle]}>{userData.phone || t('Not specified')}</Text></View><View style={styles.detailItem}><Text style={[styles.detailLabel, textStyle]}>{t('Age')}</Text><Text style={[styles.detailValue, titleStyle]}>{userData.age || t('Not specified')}</Text></View></View></View>

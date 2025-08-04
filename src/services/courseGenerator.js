@@ -8,84 +8,199 @@ const universities = [
 
 const courseTopics = [
   {
-    title: 'Introduction to Artificial Intelligence',
-    skills: ['Machine Learning', 'Python', 'Neural Networks', 'Data Analysis']
+    title: 'Mastering Machine Learning Algorithms',
+    skills: ['Machine Learning', 'Python', 'Neural Networks', 'Data Analysis'],
+    category: 'Technology'
   },
   {
-    title: 'Basics of Digital Marketing',
-    skills: ['SEO', 'Social Media', 'Content Marketing', 'Analytics']
+    title: 'Advanced Digital Marketing Strategy',
+    skills: ['SEO', 'Social Media', 'Content Marketing', 'Analytics'],
+    category: 'Marketing'
   },
   {
-    title: 'Fundamentals of Cybersecurity',
-    skills: ['Encryption', 'Network Security', 'Risk Management', 'Incident Response']
+    title: 'Cybersecurity Defense & Offense',
+    skills: ['Encryption', 'Network Security', 'Risk Management', 'Incident Response'],
+    category: 'Technology'
   },
   {
-    title: 'Web Development Bootcamp',
-    skills: ['HTML', 'CSS', 'JavaScript', 'React']
+    title: 'Full-Stack Web Development Mastery',
+    skills: ['HTML', 'CSS', 'JavaScript', 'React', 'Node.js'],
+    category: 'Technology'
   },
   {
-    title: 'Data Science Essentials',
-    skills: ['R', 'Python', 'Statistics', 'Data Visualization']
+    title: 'Data Science & Business Intelligence',
+    skills: ['R', 'Python', 'Statistics', 'Data Visualization', 'SQL'],
+    category: 'Technology'
   },
   {
-    title: 'Creative Writing Workshop',
-    skills: ['Storytelling', 'Editing', 'Poetry', 'Fiction Writing']
+    title: 'Professional Creative Writing',
+    skills: ['Storytelling', 'Editing', 'Poetry', 'Fiction Writing', 'Publishing'],
+    category: 'Arts'
   },
   {
-    title: 'Project Management Basics',
-    skills: ['Agile', 'Scrum', 'Risk Management', 'Scheduling']
+    title: 'Agile Project Management Professional',
+    skills: ['Agile', 'Scrum', 'Risk Management', 'Scheduling', 'Leadership'],
+    category: 'Business'
   },
   {
-    title: 'UX/UI Design Principles',
-    skills: ['Figma', 'Adobe XD', 'User Research', 'Prototyping']
+    title: 'UX/UI Design & User Experience',
+    skills: ['Figma', 'Adobe XD', 'User Research', 'Prototyping', 'Accessibility'],
+    category: 'Design'
   },
   {
-    title: 'Introduction to Philosophy',
-    skills: ['Critical Thinking', 'Logic', 'Ethics', 'Philosophical Analysis']
+    title: 'Critical Thinking & Philosophy',
+    skills: ['Critical Thinking', 'Logic', 'Ethics', 'Philosophical Analysis', 'Debate'],
+    category: 'Education'
   },
   {
-    title: 'Basics of Financial Accounting',
-    skills: ['Bookkeeping', 'Balance Sheets', 'Income Statements', 'Budgeting']
+    title: 'Financial Accounting & Analysis',
+    skills: ['Bookkeeping', 'Balance Sheets', 'Income Statements', 'Budgeting', 'Tax'],
+    category: 'Business'
   },
   {
-    title: 'Entrepreneurship Fundamentals',
-    skills: ['Business Planning', 'Pitching', 'Market Research', 'Startup Growth']
+    title: 'Startup Entrepreneurship & Innovation',
+    skills: ['Business Planning', 'Pitching', 'Market Research', 'Startup Growth', 'Funding'],
+    category: 'Business'
   },
   {
-    title: 'Photography for Beginners',
-    skills: ['Composition', 'Lighting', 'Editing', 'DSLR usage']
+    title: 'Professional Photography & Editing',
+    skills: ['Composition', 'Lighting', 'Editing', 'DSLR usage', 'Adobe Lightroom'],
+    category: 'Arts'
   },
   {
-    title: 'Blockchain & Cryptocurrency',
-    skills: ['Blockchain', 'Ethereum', 'Cryptography', 'Smart Contracts']
+    title: 'Blockchain Development & Smart Contracts',
+    skills: ['Blockchain', 'Ethereum', 'Cryptography', 'Smart Contracts', 'Solidity'],
+    category: 'Technology'
   },
   {
-    title: 'Introduction to Robotics',
-    skills: ['Robotics', 'Arduino', 'Automation', 'Programming']
+    title: 'Robotics & Automation Engineering',
+    skills: ['Robotics', 'Arduino', 'Automation', 'Programming', 'IoT'],
+    category: 'Technology'
   },
   {
-    title: 'Graphic Design Essentials',
-    skills: ['Photoshop', 'Illustrator', 'Typography', 'Visual Branding']
+    title: 'Advanced Graphic Design & Branding',
+    skills: ['Photoshop', 'Illustrator', 'Typography', 'Visual Branding', 'Print Design'],
+    category: 'Design'
   },
   {
-    title: 'Advanced Excel Techniques',
-    skills: ['Pivot Tables', 'Macros', 'Data Analysis', 'Visualization']
+    title: 'Excel Power User & Data Analysis',
+    skills: ['Pivot Tables', 'Macros', 'Data Analysis', 'Visualization', 'VBA'],
+    category: 'Business'
   },
   {
-    title: 'Cloud Computing Basics',
-    skills: ['AWS', 'Azure', 'Cloud Architecture', 'Deployment']
+    title: 'Cloud Architecture & DevOps',
+    skills: ['AWS', 'Azure', 'Cloud Architecture', 'Deployment', 'Docker'],
+    category: 'Technology'
   },
   {
-    title: 'Human Psychology 101',
-    skills: ['Cognitive Psychology', 'Behavior Analysis', 'Therapy Basics', 'Research Methods']
+    title: 'Clinical Psychology & Counseling',
+    skills: ['Cognitive Psychology', 'Behavior Analysis', 'Therapy Basics', 'Research Methods', 'Assessment'],
+    category: 'Healthcare'
   },
   {
-    title: 'Basics of Music Production',
-    skills: ['Logic Pro', 'Ableton', 'Mixing', 'Audio Engineering']
+    title: 'Music Production & Audio Engineering',
+    skills: ['Logic Pro', 'Ableton', 'Mixing', 'Audio Engineering', 'Sound Design'],
+    category: 'Arts'
   },
   {
-    title: 'Renewable Energy Introduction',
-    skills: ['Solar Power', 'Wind Energy', 'Sustainability', 'Energy Policy']
+    title: 'Sustainable Energy & Green Technology',
+    skills: ['Solar Power', 'Wind Energy', 'Sustainability', 'Energy Policy', 'Climate Change'],
+    category: 'Environment'
+  },
+  {
+    title: 'Mobile App Development & React Native',
+    skills: ['React Native', 'iOS', 'Android', 'Mobile UI', 'App Store'],
+    category: 'Technology'
+  },
+  {
+    title: 'Digital Art & 3D Modeling',
+    skills: ['Blender', 'Maya', '3D Modeling', 'Texturing', 'Animation'],
+    category: 'Arts'
+  },
+  {
+    title: 'Business Intelligence & Analytics',
+    skills: ['Power BI', 'Tableau', 'Data Mining', 'Predictive Analytics', 'KPI'],
+    category: 'Business'
+  },
+  {
+    title: 'Network Security & Ethical Hacking',
+    skills: ['Penetration Testing', 'Vulnerability Assessment', 'Security Tools', 'Incident Response', 'Forensics'],
+    category: 'Technology'
+  },
+  {
+    title: 'Content Creation & Social Media Marketing',
+    skills: ['Video Editing', 'Content Strategy', 'Social Media', 'Influencer Marketing', 'Analytics'],
+    category: 'Marketing'
+  },
+  {
+    title: 'Supply Chain Management & Logistics',
+    skills: ['Inventory Management', 'Logistics', 'Procurement', 'Warehouse Management', 'Transportation'],
+    category: 'Business'
+  },
+  {
+    title: 'Human Resources & Talent Management',
+    skills: ['Recruitment', 'Employee Relations', 'Performance Management', 'Training', 'HR Analytics'],
+    category: 'Business'
+  },
+  {
+    title: 'Healthcare Administration & Management',
+    skills: ['Healthcare Systems', 'Medical Billing', 'Patient Care', 'Healthcare Policy', 'Quality Management'],
+    category: 'Healthcare'
+  },
+  {
+    title: 'Environmental Science & Conservation',
+    skills: ['Ecology', 'Conservation Biology', 'Environmental Policy', 'Climate Science', 'Sustainability'],
+    category: 'Environment'
+  },
+  {
+    title: 'Culinary Arts & Food Service Management',
+    skills: ['Cooking Techniques', 'Menu Planning', 'Food Safety', 'Restaurant Management', 'Catering'],
+    category: 'Hospitality'
+  },
+  {
+    title: 'Event Planning & Hospitality Management',
+    skills: ['Event Coordination', 'Venue Management', 'Catering', 'Guest Services', 'Marketing'],
+    category: 'Hospitality'
+  },
+  {
+    title: 'Real Estate Investment & Property Management',
+    skills: ['Property Analysis', 'Investment Strategies', 'Property Management', 'Real Estate Law', 'Market Analysis'],
+    category: 'Business'
+  },
+  {
+    title: 'Fashion Design & Merchandising',
+    skills: ['Fashion Design', 'Pattern Making', 'Textile Science', 'Merchandising', 'Fashion Marketing'],
+    category: 'Arts'
+  },
+  {
+    title: 'Sports Management & Athletic Administration',
+    skills: ['Sports Marketing', 'Athletic Administration', 'Event Management', 'Sports Law', 'Facility Management'],
+    category: 'Sports'
+  },
+  {
+    title: 'Public Relations & Corporate Communications',
+    skills: ['Media Relations', 'Crisis Communication', 'Brand Management', 'Stakeholder Engagement', 'PR Strategy'],
+    category: 'Business'
+  },
+  {
+    title: 'Interior Design & Space Planning',
+    skills: ['Space Planning', 'Color Theory', 'Furniture Design', 'Lighting Design', 'CAD Software'],
+    category: 'Design'
+  },
+  {
+    title: 'Game Development & Unity Programming',
+    skills: ['Unity', 'C#', 'Game Design', '3D Modeling', 'Game Mechanics'],
+    category: 'Technology'
+  },
+  {
+    title: 'Artificial Intelligence & Deep Learning',
+    skills: ['Deep Learning', 'TensorFlow', 'Computer Vision', 'NLP', 'AI Ethics'],
+    category: 'Technology'
+  },
+  {
+    title: 'Digital Transformation & Change Management',
+    skills: ['Change Management', 'Digital Strategy', 'Process Improvement', 'Technology Adoption', 'Leadership'],
+    category: 'Business'
   }
 ];
 

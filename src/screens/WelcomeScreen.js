@@ -270,12 +270,14 @@ const styles = StyleSheet.create({
     shadowRadius: 8,
   },
   logoImage: {
-    width: 120, // Adjusted for better fit
-    height: 120, // Adjusted for better fit
+    width: 400, // Adjusted for better fit
+    height: 400,
+    bottom: 25,
+     // Adjusted for better fit
   },
   waveContainer: {
     position: 'absolute',
-    bottom: -1,
+    bottom: -30,
     left: 0,
     right: 0,
   },
