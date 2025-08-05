@@ -346,6 +346,17 @@ const generateCourses = (count, topicList) => {
     const lengthWeeks = Math.floor(Math.random() * 12) + 1;
     const length = `${lengthWeeks} weeks`;
     const skills = getRandomSkills(topic.skills, Math.floor(Math.random() * 4) + 2);
+    const level = ['Beginner', 'Intermediate', 'Advanced'][Math.floor(Math.random() * 3)];
+    const delivery = ['Online', 'Hybrid', 'Self-paced'][Math.floor(Math.random() * 3)];
+    
+    // Create help reason based on the course topic
+    const helpReasons = [
+      `This course will help you develop essential skills in ${topic.title.toLowerCase()} that are highly valued in today's job market.`,
+      `Perfect for advancing your career in ${topic.title.toLowerCase()}, this course provides practical knowledge and hands-on experience.`,
+      `Designed to bridge the gap between theory and practice in ${topic.title.toLowerCase()}, this course will enhance your professional capabilities.`,
+      `This comprehensive course in ${topic.title.toLowerCase()} will prepare you for real-world challenges and career advancement opportunities.`
+    ];
+    const helpReason = helpReasons[Math.floor(Math.random() * helpReasons.length)];
     
     courses.push({
       id: `course_${Date.now()}_${i}`,
@@ -353,10 +364,13 @@ const generateCourses = (count, topicList) => {
       provider: uni,
       description: description,
       image: `https://source.unsplash.com/400x300/?${topic.title.split(' ')[0]},technology`,
-      level: ['Beginner', 'Intermediate', 'Advanced'][Math.floor(Math.random() * 3)],
+      level: level,
       duration: length,
-      price: price,
-      skills: skills.join(', '),
+      price: `$${price}`,
+      skills: skills,
+      delivery: delivery,
+      helpReason: helpReason,
+      category: topic.category || 'General',
       course_url: `https://example.com/course/${name.toLowerCase().replace(/\s+/g, '-')}`
     });
   }

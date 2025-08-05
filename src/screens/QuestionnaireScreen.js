@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo, useEffect, useRef } from 'react';
 import {
   View,
   Text,
@@ -64,6 +64,8 @@ const QuestionnaireScreen = ({ navigation, route }) => {
     cvFiles: [],
     profilePhoto: null, // Add profile photo state
   });
+
+  const scrollViewRef = useRef(null);
 
   const { isDarkMode } = useDarkMode();
   const { t } = useLanguage();
@@ -188,7 +190,18 @@ const QuestionnaireScreen = ({ navigation, route }) => {
         },
         {
           label: 'AI Consulting',
-          subOptions: []
+          subOptions: [
+            'Machine Learning Engineering',
+            'Natural Language Processing',
+            'Computer Vision',
+            'AI/ML Model Optimization',
+            'AI Infrastructure & MLOps',
+            'AI Strategy Consulting',
+            'Responsible AI & Ethics',
+            'AI Product Management',
+            'Data Strategy & Governance',
+            t('Other')
+          ]
         },
         {
           label: t('Other'),
@@ -234,13 +247,38 @@ const QuestionnaireScreen = ({ navigation, route }) => {
         },
         {
           label: 'AI Consulting',
-          subOptions: []
+          subOptions: [
+            'Machine Learning Engineering',
+            'Natural Language Processing',
+            'Computer Vision',
+            'AI/ML Model Optimization',
+            'AI Infrastructure & MLOps',
+            'AI Strategy Consulting',
+            'Responsible AI & Ethics',
+            'AI Product Management',
+            'Data Strategy & Governance',
+            t('Other')
+          ]
         },
         {
           label: t('Other'),
           subOptions: []
         }
       ]
+    },
+    {
+      id: 'languageProficiency',
+      question: t('Which languages are you proficient in for professional or work-related use? (multiple options)'),
+      type: 'multiple',
+      options: [
+        t('Arabic'),
+        t('English'),
+        t('Hebrew'),
+        t('French'),
+        t('Spanish'),
+        t('Other')
+      ],
+      hasOther: true
     },
     {
       id: 'dreamJob',
@@ -272,6 +310,12 @@ const QuestionnaireScreen = ({ navigation, route }) => {
     setCurrentPage(0);
   }, []);
 
+  useEffect(() => {
+    if (scrollViewRef.current) {
+      scrollViewRef.current.scrollTo({ y: 0, animated: false });
+    }
+  }, [currentPage]);
+
   const handleAnswer = (questionId, answer, subOption = null) => {
     console.log('handleAnswer called:', { questionId, answer, subOption, currentAnswers: answers[questionId] });
     
@@ -299,11 +343,16 @@ const QuestionnaireScreen = ({ navigation, route }) => {
           console.log('Updated sub-options:', newAnswers);
           setAnswers({ ...answers, [questionId]: newAnswers });
         } else {
-          // Handle main object option selection
-          const newAnswers = currentAnswers[answer]
-            ? { ...currentAnswers }
-            : { ...currentAnswers, [answer]: [] };
-          
+          // Handle main object option selection (toggle)
+          let newAnswers;
+          if (currentAnswers[answer]) {
+            // If already selected, remove it (uncheck and collapse)
+            newAnswers = { ...currentAnswers };
+            delete newAnswers[answer];
+          } else {
+            // If not selected, add it
+            newAnswers = { ...currentAnswers, [answer]: [] };
+          }
           console.log('Updated main option:', newAnswers);
           setAnswers({ ...answers, [questionId]: newAnswers });
         }
@@ -529,6 +578,7 @@ const QuestionnaireScreen = ({ navigation, route }) => {
       
       return (
         <ScrollView 
+          ref={scrollViewRef}
           style={styles.questionScrollView} 
           contentContainerStyle={styles.questionScrollContent}
           showsVerticalScrollIndicator={true}

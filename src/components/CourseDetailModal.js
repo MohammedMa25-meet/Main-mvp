@@ -18,6 +18,20 @@ const CourseDetailModal = ({ visible, course, onClose }) => {
   
   if (!course) return null;
 
+  // Safe access to course properties
+  const safeCourse = {
+    title: course.title || 'Untitled Course',
+    provider: course.provider || 'Unknown Provider',
+    description: course.description || 'No description available',
+    level: course.level || 'General',
+    duration: course.duration || 'Not specified',
+    price: course.price || 'Not specified',
+    delivery: course.delivery || 'Online',
+    skills: course.skills || [],
+    helpReason: course.helpReason || t("This course is designed to enhance your skills and knowledge in the field. It's perfect for your current experience level and career goals."),
+    image: course.image || 'https://source.unsplash.com/400x300/?education,technology'
+  };
+
   return (
     <Modal
       visible={visible}
@@ -37,30 +51,30 @@ const CourseDetailModal = ({ visible, course, onClose }) => {
         <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
           {/* Course Title and Provider */}
           <View style={styles.titleSection}>
-            <Text style={[styles.courseTitle, isDarkMode && styles.courseTitleDark]}>{course.title}</Text>
-            <Text style={[styles.providerInfo, isDarkMode && styles.providerInfoDark]}>{course.provider}</Text>
+            <Text style={[styles.courseTitle, isDarkMode && styles.courseTitleDark]}>{safeCourse.title}</Text>
+            <Text style={[styles.providerInfo, isDarkMode && styles.providerInfoDark]}>{safeCourse.provider}</Text>
           </View>
 
           {/* Course Overview */}
           <View style={styles.overviewContainer}>
             <View style={[styles.overviewCard, isDarkMode && styles.overviewCardDark]}>
               <Ionicons name="globe-outline" size={20} color="#6B7280" />
-              <Text style={[styles.overviewLabel, isDarkMode && styles.overviewLabelDark]}>{course.delivery}</Text>
+              <Text style={[styles.overviewLabel, isDarkMode && styles.overviewLabelDark]}>{safeCourse.delivery}</Text>
               <Text style={[styles.overviewDescription, isDarkMode && styles.overviewDescriptionDark]}>{t('Delivery')}</Text>
             </View>
             <View style={[styles.overviewCard, isDarkMode && styles.overviewCardDark]}>
               <Ionicons name="time-outline" size={20} color="#6B7280" />
-              <Text style={[styles.overviewLabel, isDarkMode && styles.overviewLabelDark]}>{course.duration}</Text>
+              <Text style={[styles.overviewLabel, isDarkMode && styles.overviewLabelDark]}>{safeCourse.duration}</Text>
               <Text style={[styles.overviewDescription, isDarkMode && styles.overviewDescriptionDark]}>{t('Duration')}</Text>
             </View>
             <View style={[styles.overviewCard, isDarkMode && styles.overviewCardDark]}>
               <Ionicons name="trending-up-outline" size={20} color="#6B7280" />
-              <Text style={[styles.overviewLabel, isDarkMode && styles.overviewLabelDark]}>{course.level}</Text>
+              <Text style={[styles.overviewLabel, isDarkMode && styles.overviewLabelDark]}>{safeCourse.level}</Text>
               <Text style={[styles.overviewDescription, isDarkMode && styles.overviewDescriptionDark]}>{t('Level')}</Text>
             </View>
             <View style={[styles.overviewCard, isDarkMode && styles.overviewCardDark]}>
               <Ionicons name="cash-outline" size={20} color="#6B7280" />
-              <Text style={[styles.overviewLabel, isDarkMode && styles.overviewLabelDark]}>{course.price}</Text>
+              <Text style={[styles.overviewLabel, isDarkMode && styles.overviewLabelDark]}>{safeCourse.price}</Text>
               <Text style={[styles.overviewDescription, isDarkMode && styles.overviewDescriptionDark]}>{t('Price')}</Text>
             </View>
           </View>
@@ -73,7 +87,7 @@ const CourseDetailModal = ({ visible, course, onClose }) => {
             </View>
             <View style={[styles.helpCard, isDarkMode && styles.helpCardDark]}>
               <Text style={[styles.helpText, isDarkMode && styles.helpTextDark]}>
-                {course.helpReason || t("This course is designed to enhance your skills and knowledge in the field. It's perfect for your current experience level and career goals.")}
+                {safeCourse.helpReason}
               </Text>
             </View>
           </View>
@@ -85,18 +99,30 @@ const CourseDetailModal = ({ visible, course, onClose }) => {
               <Text style={[styles.sectionTitle, isDarkMode && styles.sectionTitleDark]}>{t('Skills You\'ll Develop')}</Text>
             </View>
             <View style={styles.skillsContainer}>
-              {course.skills?.map((skill, index) => (
-                <View key={index} style={[styles.skillTag, isDarkMode && styles.skillTagDark]}>
-                  <Text style={[styles.skillText, isDarkMode && styles.skillTextDark]}>{skill}</Text>
-                </View>
-              ))}
+              {Array.isArray(safeCourse.skills) ? (
+                safeCourse.skills.map((skill, index) => (
+                  <View key={index} style={[styles.skillTag, isDarkMode && styles.skillTagDark]}>
+                    <Text style={[styles.skillText, isDarkMode && styles.skillTextDark]}>{skill}</Text>
+                  </View>
+                ))
+              ) : typeof safeCourse.skills === 'string' ? (
+                safeCourse.skills.split(',').map((skill, index) => (
+                  <View key={index} style={[styles.skillTag, isDarkMode && styles.skillTagDark]}>
+                    <Text style={[styles.skillText, isDarkMode && styles.skillTextDark]}>{skill.trim()}</Text>
+                  </View>
+                ))
+              ) : (
+                <Text style={[styles.descriptionText, isDarkMode && styles.descriptionTextDark]}>
+                  {t('Skills information not available')}
+                </Text>
+              )}
             </View>
           </View>
 
           {/* Course Description */}
           <View style={styles.section}>
             <Text style={[styles.sectionTitle, isDarkMode && styles.sectionTitleDark]}>{t('Course Description')}</Text>
-            <Text style={[styles.descriptionText, isDarkMode && styles.descriptionTextDark]}>{course.description}</Text>
+            <Text style={[styles.descriptionText, isDarkMode && styles.descriptionTextDark]}>{safeCourse.description}</Text>
           </View>
 
           {/* Course Outline */}

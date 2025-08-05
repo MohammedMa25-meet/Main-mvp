@@ -124,33 +124,73 @@ const getAiRecommendations = async (userData, courseCatalog, jobListings) => {
 export const runFullAiAnalysis = async (userData) => {
   console.log('Running full AI analysis for user:', userData.uid);
   try {
-    // Use the new questionnaire structure to get search keywords
-    let searchKeywords = 'professional development';
+    // Create intelligent search keywords based on questionnaire answers
+    let searchKeywords = [];
     
     console.log('User data for AI analysis:', {
       careerGoal: userData.careerGoal,
       fieldExperience: userData.fieldExperience,
       desiredField: userData.desiredField,
       experience: userData.experience,
-      employmentStatus: userData.employmentStatus
+      employmentStatus: userData.employmentStatus,
+      dreamJob: userData.dreamJob
     });
     
-    if (userData.fieldExperience && Object.keys(userData.fieldExperience).length > 0) {
-      searchKeywords = Object.keys(userData.fieldExperience).join(' ');
-    } else if (userData.desiredField && Object.keys(userData.desiredField).length > 0) {
-      searchKeywords = Object.keys(userData.desiredField).join(' ');
-    } else if (userData.careerGoal) {
-      searchKeywords = userData.careerGoal;
+    // Build search keywords from questionnaire answers
+    if (userData.careerGoal) {
+      searchKeywords.push(userData.careerGoal);
     }
-
-    console.log('Search keywords:', searchKeywords);
+    
+    if (userData.fieldExperience && Object.keys(userData.fieldExperience).length > 0) {
+      // Extract sub-options from field experience
+      Object.values(userData.fieldExperience).forEach(subOptions => {
+        if (Array.isArray(subOptions)) {
+          searchKeywords.push(...subOptions);
+        }
+      });
+    }
+    
+    if (userData.desiredField && Object.keys(userData.desiredField).length > 0) {
+      // Extract sub-options from desired field
+      Object.values(userData.desiredField).forEach(subOptions => {
+        if (Array.isArray(subOptions)) {
+          searchKeywords.push(...subOptions);
+        }
+      });
+    }
+    
+    if (userData.dreamJob) {
+      searchKeywords.push(userData.dreamJob);
+    }
+    
+    if (userData.experience) {
+      searchKeywords.push(userData.experience);
+    }
+    
+    // Add employment status context
+    if (userData.employmentStatus) {
+      if (userData.employmentStatus.includes('unemployed')) {
+        searchKeywords.push('entry level', 'beginner', 'foundation');
+      } else if (userData.employmentStatus.includes('employed but not satisfied')) {
+        searchKeywords.push('career advancement', 'skill development', 'professional growth');
+      } else if (userData.employmentStatus.includes('employed but not in my field')) {
+        searchKeywords.push('career transition', 'field change', 'new skills');
+      }
+    }
+    
+    // If no keywords found, use defaults
+    if (searchKeywords.length === 0) {
+      searchKeywords = ['professional development', 'career growth', 'skill building'];
+    }
+    
+    const searchQuery = searchKeywords.join(' ');
+    console.log('Search keywords:', searchQuery);
 
     const [courseCatalog, jobListings] = await Promise.all([
-      fetchCourses(searchKeywords),
-      fetchJobs(searchKeywords)
+      fetchCourses(searchQuery),
+      fetchJobs(searchQuery)
     ]);
 
-    // ✅ We no longer throw an error if one API fails. We proceed with what we have.
     console.log(`Found ${courseCatalog.length} courses and ${jobListings.length} jobs.`);
 
     // If AI fails, return some default recommendations
@@ -172,12 +212,41 @@ export const runFullAiAnalysis = async (userData) => {
       console.log('Found recommended courses:', recommendedCourses.length);
       console.log('Found recommended jobs:', recommendedJobs.length);
     } catch (aiError) {
-      console.error("AI recommendation failed, using fallback:", aiError);
-      // Fallback: use test generators to ensure we have data
-      const testData = testGenerators();
-      recommendedCourses = testData.courses;
-      recommendedJobs = testData.jobs;
-      console.log('Using test generators - courses:', recommendedCourses.length, 'jobs:', recommendedJobs.length);
+      console.error("AI recommendation failed, using intelligent fallback:", aiError);
+      
+      // Intelligent fallback: match courses and jobs based on keywords
+      const keywordMatches = searchKeywords.slice(0, 3); // Use top 3 keywords
+      
+      // Find courses that match keywords
+      recommendedCourses = courseCatalog.filter(course => 
+        keywordMatches.some(keyword => 
+          course.title.toLowerCase().includes(keyword.toLowerCase()) ||
+          course.skills.some(skill => skill.toLowerCase().includes(keyword.toLowerCase())) ||
+          course.category.toLowerCase().includes(keyword.toLowerCase())
+        )
+      ).slice(0, 6); // Get up to 6 courses
+      
+      // Find jobs that match keywords
+      recommendedJobs = jobListings.filter(job => 
+        keywordMatches.some(keyword => 
+          job.title.toLowerCase().includes(keyword.toLowerCase()) ||
+          job.category.toLowerCase().includes(keyword.toLowerCase()) ||
+          job.description.toLowerCase().includes(keyword.toLowerCase())
+        )
+      ).slice(0, 6); // Get up to 6 jobs
+      
+      console.log('Using keyword matching - courses:', recommendedCourses.length, 'jobs:', recommendedJobs.length);
+    }
+
+    // Ensure we always have some recommendations
+    if (recommendedCourses.length === 0 && courseCatalog.length > 0) {
+      console.log('No AI courses, using first 6 from catalog');
+      recommendedCourses = courseCatalog.slice(0, 6);
+    }
+    
+    if (recommendedJobs.length === 0 && jobListings.length > 0) {
+      console.log('No AI jobs, using first 6 from listings');
+      recommendedJobs = jobListings.slice(0, 6);
     }
 
     const userDocRef = doc(db, 'users', userData.uid);
@@ -188,24 +257,11 @@ export const runFullAiAnalysis = async (userData) => {
       lastAnalysisDate: new Date(),
     });
 
-    // Ensure we always have some recommendations
-    if (recommendedCourses.length === 0 && courseCatalog.length > 0) {
-      console.log('No AI courses, using first 3 from catalog');
-      recommendedCourses = courseCatalog.slice(0, 3);
-    }
-    
-    if (recommendedJobs.length === 0 && jobListings.length > 0) {
-      console.log('No AI jobs, using first 3 from listings');
-      recommendedJobs = jobListings.slice(0, 3);
-    }
-    
-    console.log('Final recommendations - courses:', recommendedCourses.length, 'jobs:', recommendedJobs.length);
-    console.log('AI analysis and save complete.');
     return { recommendedCourses, recommendedJobs };
-
   } catch (error) {
-    console.error("Error during full AI analysis:", error);
-    // ✅ Return empty arrays on failure
-    return { recommendedCourses: [], recommendedJobs: [] };
+    console.error('Error in runFullAiAnalysis:', error);
+    // Return test data as final fallback
+    const testData = testGenerators();
+    return { recommendedCourses: testData.courses, recommendedJobs: testData.jobs };
   }
 };

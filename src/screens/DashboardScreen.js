@@ -18,6 +18,7 @@ import { useDarkMode } from '../context/DarkModeContext';
 import { useUser } from '../context/UserContext';
 import { useLanguage } from '../context/LanguageContext';
 import { runFullAiAnalysis } from '../services/aiService';
+import { generateJobCatalog } from '../services/jobGenerator';
 
 const HomepageScreen = ({ navigation, onScreenChange }) => {
   const { userData, updateUserData, clearUserData } = useUser();
@@ -51,15 +52,103 @@ const HomepageScreen = ({ navigation, onScreenChange }) => {
       console.log('Filtered courses:', filteredCourses.length);
       console.log('Filtered jobs:', filteredJobs.length);
       
-      // If no recommendations, try to get some test data
-      if (filteredCourses.length === 0 || filteredJobs.length === 0) {
-        console.log('No recommendations found, this might be a new user or analysis failed');
+      // Debug: Log first course structure
+      if (filteredCourses.length > 0) {
+        console.log('First course structure:', JSON.stringify(filteredCourses[0], null, 2));
+      }
+      
+      // Debug: Log first job structure
+      if (filteredJobs.length > 0) {
+        console.log('First job structure:', JSON.stringify(filteredJobs[0], null, 2));
+      }
+      
+      // Always generate jobs if none are available
+      if (filteredJobs.length === 0) {
+        console.log('No jobs found, generating test jobs...');
+        try {
+          const testJobs = generateJobCatalog().slice(0, 6);
+          console.log('Generated test jobs:', testJobs.length);
+          console.log('Sample test job:', testJobs[0]);
+          setJobs(testJobs);
+          setFilteredJobs(testJobs);
+        } catch (error) {
+          console.error('Error generating test jobs:', error);
+          // Create simple fallback jobs
+          const fallbackJobs = [
+            {
+              id: 'job_fallback_1',
+              title: 'Software Developer',
+              company: 'TechCorp Middle East',
+              location: 'Dubai, UAE',
+              description: 'Join our dynamic team to develop innovative software solutions.',
+              workType: 'Remote',
+              category: 'Technology',
+              image: 'https://source.unsplash.com/400x400/?company,logo'
+            },
+            {
+              id: 'job_fallback_2',
+              title: 'Data Analyst',
+              company: 'Digital Solutions Arabia',
+              location: 'Riyadh, Saudi Arabia',
+              description: 'Analyze complex data sets to provide actionable insights.',
+              workType: 'Hybrid',
+              category: 'Data Science',
+              image: 'https://source.unsplash.com/400x400/?company,logo'
+            },
+            {
+              id: 'job_fallback_3',
+              title: 'UI/UX Designer',
+              company: 'Innovation Hub Qatar',
+              location: 'Doha, Qatar',
+              description: 'Create beautiful and intuitive user experiences.',
+              workType: 'On-site',
+              category: 'Design',
+              image: 'https://source.unsplash.com/400x400/?company,logo'
+            }
+          ];
+          setJobs(fallbackJobs);
+          setFilteredJobs(fallbackJobs);
+        }
+      } else {
+        setJobs(filteredJobs);
+        setFilteredJobs(filteredJobs);
       }
       
       setCourses(filteredCourses);
-      setJobs(filteredJobs);
-      setFilteredCourses(filteredCourses);
-      setFilteredJobs(filteredJobs);
+    } else {
+      // If no user data, still generate some jobs
+      console.log('No user data, generating default jobs...');
+      try {
+        const defaultJobs = generateJobCatalog().slice(0, 6);
+        setJobs(defaultJobs);
+        setFilteredJobs(defaultJobs);
+      } catch (error) {
+        console.error('Error generating default jobs:', error);
+        const fallbackJobs = [
+          {
+            id: 'job_default_1',
+            title: 'Software Developer',
+            company: 'TechCorp Middle East',
+            location: 'Dubai, UAE',
+            description: 'Join our dynamic team to develop innovative software solutions.',
+            workType: 'Remote',
+            category: 'Technology',
+            image: 'https://source.unsplash.com/400x400/?company,logo'
+          },
+          {
+            id: 'job_default_2',
+            title: 'Data Analyst',
+            company: 'Digital Solutions Arabia',
+            location: 'Riyadh, Saudi Arabia',
+            description: 'Analyze complex data sets to provide actionable insights.',
+            workType: 'Hybrid',
+            category: 'Data Science',
+            image: 'https://source.unsplash.com/400x400/?company,logo'
+          }
+        ];
+        setJobs(fallbackJobs);
+        setFilteredJobs(fallbackJobs);
+      }
     }
     setIsLoading(false);
   }, [userData]);
@@ -122,8 +211,26 @@ const HomepageScreen = ({ navigation, onScreenChange }) => {
   };
 
   const handleMenuPress = () => setShowSidebar(!showSidebar);
-  const handleJobPress = (job) => { setSelectedJob(job); setShowJobModal(true); };
-  const handleCoursePress = (course) => { setSelectedCourse(course); setShowCourseModal(true); };
+  const handleJobPress = (job) => { 
+    try {
+      console.log('Opening job details:', job);
+      setSelectedJob(job); 
+      setShowJobModal(true); 
+    } catch (error) {
+      console.error('Error opening job details:', error);
+      Alert.alert(t('Error'), t('Failed to open job details. Please try again.'));
+    }
+  };
+  const handleCoursePress = (course) => { 
+    try {
+      console.log('Opening course details:', course);
+      setSelectedCourse(course); 
+      setShowCourseModal(true); 
+    } catch (error) {
+      console.error('Error opening course details:', error);
+      Alert.alert(t('Error'), t('Failed to open course details. Please try again.'));
+    }
+  };
   const handleProfilePress = () => { setShowSidebar(false); if (onScreenChange) onScreenChange('Profile'); };
   const handleCalendarPress = () => { setShowSidebar(false); if (onScreenChange) onScreenChange('Calendar'); };
   const handleSettingsPress = () => { setShowSidebar(false); if (onScreenChange) onScreenChange('Settings'); };
@@ -190,7 +297,7 @@ const HomepageScreen = ({ navigation, onScreenChange }) => {
 
         {/* Search Bar */}
         <View style={styles.searchContainer}>
-          <View style={[styles.searchBar, isDarkMode && styles.searchBarDark]}>
+          <View style={styles.searchInputContainer}>
             <Ionicons name="search" size={20} color="#6B7280" />
             <TextInput
               style={[styles.searchInput, isDarkMode && styles.searchInputDark]}
@@ -215,6 +322,7 @@ const HomepageScreen = ({ navigation, onScreenChange }) => {
             </View>
           ) : activeTab === 'Jobs' ? (
             <View>
+              {console.log('Rendering jobs tab, filteredJobs length:', filteredJobs.length)}
               {filteredJobs.length > 0 ? (
                 filteredJobs.map((job) => (
                   <TouchableOpacity key={job.id} style={[styles.jobCard, cardStyle]} onPress={() => handleJobPress(job)}>
@@ -222,21 +330,26 @@ const HomepageScreen = ({ navigation, onScreenChange }) => {
                       <View style={styles.categoryTag}>
                         <Text style={styles.categoryText}>{job.category || 'General'}</Text>
                       </View>
-                      <Image source={{uri: job.image || 'https://source.unsplash.com/400x400/?company,logo'}} style={styles.jobIcon} />
+                      <Image 
+                        source={{uri: job.image || 'https://source.unsplash.com/400x400/?company,logo'}} 
+                        style={styles.jobIcon} 
+                      />
                     </View>
-                    <Text style={[styles.jobTitle, titleStyle]}>{job.title}</Text>
-                    <Text style={[styles.companyName, textStyle]}>{job.company}</Text>
+                    <Text style={[styles.jobTitle, titleStyle]}>{job.title || 'Untitled Job'}</Text>
+                    <Text style={[styles.companyName, textStyle]}>{job.company || 'Unknown Company'}</Text>
                     <View style={styles.jobDetails}>
                       <View style={styles.jobDetailItem}>
                         <Ionicons name="location-outline" size={16} color="#6b7280" />
-                        <Text style={styles.jobDetailText}>{job.location}</Text>
+                        <Text style={styles.jobDetailText}>{job.location || 'Location not specified'}</Text>
                       </View>
                       <View style={styles.jobDetailItem}>
                         <Ionicons name="business-outline" size={16} color="#6b7280" />
-                        <Text style={styles.jobDetailText}>{job.workType}</Text>
+                        <Text style={styles.jobDetailText}>{job.workType || 'Not specified'}</Text>
                       </View>
                     </View>
-                    <Text style={[styles.jobDescription, textStyle]} numberOfLines={3}>{job.description}</Text>
+                    <Text style={[styles.jobDescription, textStyle]} numberOfLines={3}>
+                      {job.description || 'No description available'}
+                    </Text>
                     <TouchableOpacity style={styles.viewDetailsButton} onPress={() => handleJobPress(job)}>
                       <Text style={styles.viewDetailsText}>{t('View Details')}</Text>
                       <Ionicons name="arrow-forward" size={16} color="#ffffff" />
@@ -260,12 +373,17 @@ const HomepageScreen = ({ navigation, onScreenChange }) => {
               {filteredCourses.length > 0 ? (
                 filteredCourses.map((course) => (
                   <TouchableOpacity key={course.id} style={[styles.courseCard, cardStyle]} onPress={() => handleCoursePress(course)}>
-                    <Image source={{ uri: course.image }} style={styles.courseImage} />
+                    <Image 
+                      source={{ uri: course.image || 'https://source.unsplash.com/400x300/?education,technology' }} 
+                      style={styles.courseImage} 
+                    />
                     <View style={styles.courseCategoryTag}>
-                      <Text style={styles.courseCategoryText}>{course.level || 'General'}</Text>
+                      <Text style={styles.courseCategoryText}>
+                        {course.level || course.category || 'General'}
+                      </Text>
                     </View>
-                    <Text style={[styles.courseTitle, titleStyle]}>{course.title}</Text>
-                    <Text style={[styles.courseProvider, textStyle]}>{course.provider}</Text>
+                    <Text style={[styles.courseTitle, titleStyle]}>{course.title || 'Untitled Course'}</Text>
+                    <Text style={[styles.courseProvider, textStyle]}>{course.provider || 'Unknown Provider'}</Text>
                     <View style={styles.courseDetails}>
                       {course.duration && (
                         <View style={styles.courseDetailItem}>
@@ -275,10 +393,12 @@ const HomepageScreen = ({ navigation, onScreenChange }) => {
                       )}
                       <View style={styles.courseDetailItem}>
                         <Ionicons name="globe-outline" size={16} color="#6b7280" />
-                        <Text style={styles.courseDetailText}>Online</Text>
+                        <Text style={styles.courseDetailText}>{course.delivery || 'Online'}</Text>
                       </View>
                     </View>
-                    <Text style={[styles.courseDescription, textStyle]} numberOfLines={3}>{course.description}</Text>
+                    <Text style={[styles.courseDescription, textStyle]} numberOfLines={3}>
+                      {course.description || 'No description available'}
+                    </Text>
                     <TouchableOpacity style={styles.viewDetailsButton} onPress={() => handleCoursePress(course)}>
                       <Text style={styles.viewDetailsText}>{t('View Details')}</Text>
                       <Ionicons name="arrow-forward" size={16} color="#ffffff" />
@@ -349,7 +469,7 @@ const styles = StyleSheet.create({
   activeTabText: { color: '#1f2937' },
   inactiveTabText: { color: '#9ca3af' },
   searchContainer: { paddingHorizontal: 20, marginBottom: 16 },
-  searchBar: { 
+  searchInputContainer: { 
     flexDirection: 'row', 
     alignItems: 'center', 
     backgroundColor: '#FFFFFF', 

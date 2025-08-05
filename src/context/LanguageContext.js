@@ -437,6 +437,14 @@ export const LanguageProvider = ({ children }) => {
     'Are you sure you want to remove your profile photo?': 'هل أنت متأكد من أنك تريد إزالة صورة ملفك الشخصي؟',
     'Failed to remove profile photo.': 'فشل في إزالة صورة الملف الشخصي.',
     'Profile photo removed!': 'تم إزالة صورة الملف الشخصي!',
+    'Skills information not available': 'معلومات المهارات غير متاحة',
+    'Which languages are you proficient in for professional or work-related use? (multiple options)': 'ما هي اللغات التي تتقنها للاستخدام المهني أو المتعلق بالعمل؟ (خيارات متعددة)',
+    'Arabic': 'العربية',
+    'English': 'الإنجليزية',
+    'Hebrew': 'العبرية',
+    'French': 'الفرنسية',
+    'Spanish': 'الإسبانية',
+    'Other': 'أخرى',
   };
 
   const t = (key) => {
