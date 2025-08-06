@@ -23,6 +23,8 @@ import { useUser } from '../context/UserContext';
 import { auth, db } from '../services/firebase';
 import { signInWithEmailAndPassword } from 'firebase/auth';
 import { doc, getDoc } from 'firebase/firestore';
+import { handleAppleSignIn, handleAuthResult } from '../services/socialAuth';
+import { useGoogleSignIn } from '../components/GoogleSignIn';
 
 const WelcomeScreen = ({ navigation }) => {
   const [email, setEmail] = useState('');
@@ -31,6 +33,7 @@ const WelcomeScreen = ({ navigation }) => {
   const [showPassword, setShowPassword] = useState(false);
   const { language, toggleLanguage, t } = useLanguage();
   const { updateUserData } = useUser(); // ✅ From your working code
+  const { signInWithGoogle } = useGoogleSignIn();
 
   // ✅ This is your fully functional handleEmailLogin function
   const handleEmailLogin = async () => {
@@ -67,6 +70,82 @@ const WelcomeScreen = ({ navigation }) => {
     } catch (error) {
       console.error('Firebase Login Error:', error);
       Alert.alert(t('Error'), t('Invalid email or password. Please try again.'));
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleGoogleLogin = async () => {
+    setIsLoading(true);
+    try {
+      let result;
+      
+      if (Platform.OS === 'web') {
+        // For web, use the socialAuth service
+        const { handleGoogleSignIn } = await import('../services/socialAuth');
+        result = await handleGoogleSignIn();
+      } else {
+        // For mobile, use the hook
+        const user = await signInWithGoogle();
+        result = await handleAuthResult(user);
+      }
+      
+      if (result.isNewUser) {
+        // New user, redirect to questionnaire
+        Alert.alert(
+          t('Welcome!'),
+          t('Please complete your profile by answering a few questions.'),
+          [{ text: 'OK', onPress: () => navigation.navigate('Questionnaire', {
+              userAuth: { uid: result.user.uid, email: result.user.email },
+              userData: result.userData
+            })
+          }]
+        );
+      } else {
+        // Existing user, go to main screen
+        updateUserData(result.userData);
+        navigation.navigate('MainScreen');
+      }
+    } catch (error) {
+      console.error('Google Sign-In Error:', error);
+      let errorMessage = t('Google sign-in failed. Please try again.');
+      
+      if (error.message.includes('cancelled')) {
+        errorMessage = t('Google sign-in was cancelled.');
+      } else if (error.message.includes('configuration')) {
+        errorMessage = t('Google sign-in is not properly configured. Please contact support.');
+      }
+      
+      Alert.alert(t('Error'), errorMessage);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleAppleLogin = async () => {
+    setIsLoading(true);
+    try {
+      const result = await handleAppleSignIn();
+      
+      if (result.isNewUser) {
+        // New user, redirect to questionnaire
+        Alert.alert(
+          t('Welcome!'),
+          t('Please complete your profile by answering a few questions.'),
+          [{ text: 'OK', onPress: () => navigation.navigate('Questionnaire', {
+              userAuth: { uid: result.user.uid, email: result.user.email },
+              userData: result.userData
+            })
+          }]
+        );
+      } else {
+        // Existing user, go to main screen
+        updateUserData(result.userData);
+        navigation.navigate('MainScreen');
+      }
+    } catch (error) {
+      console.error('Apple Sign-In Error:', error);
+      Alert.alert(t('Error'), t('Apple sign-in failed. Please try again.'));
     } finally {
       setIsLoading(false);
     }
@@ -185,6 +264,7 @@ const WelcomeScreen = ({ navigation }) => {
                     )}
                   </LinearGradient>
                 </TouchableOpacity>
+
                 <TouchableOpacity
                   style={styles.newAccountInButton}
                   onPress={handleSignUp}
@@ -195,6 +275,37 @@ const WelcomeScreen = ({ navigation }) => {
                     <Text style={styles.createAccountText}>{t('CREATE AN ACCOUNT')}</Text>
                   </View>
                 </TouchableOpacity>
+
+                {/* Social Login Section */}
+                <View style={styles.socialLoginContainer}>
+                  <View style={styles.dividerContainer}>
+                    <View style={styles.divider} />
+                    <Text style={styles.dividerText}>{t('OR')}</Text>
+                    <View style={styles.divider} />
+                  </View>
+                  
+                  <TouchableOpacity
+                    style={styles.googleButton}
+                    onPress={handleGoogleLogin}
+                    disabled={isLoading}
+                    activeOpacity={0.8}
+                  >
+                    <Ionicons name="logo-google" size={20} color="#DB4437" />
+                    <Text style={styles.googleButtonText}>{t('Continue with Google')}</Text>
+                  </TouchableOpacity>
+
+                  {Platform.OS === 'ios' && (
+                    <TouchableOpacity
+                      style={styles.appleButton}
+                      onPress={handleAppleLogin}
+                      disabled={isLoading}
+                      activeOpacity={0.8}
+                    >
+                      <Ionicons name="logo-apple" size={20} color="#000000" />
+                      <Text style={styles.appleButtonText}>{t('Continue with Apple')}</Text>
+                    </TouchableOpacity>
+                  )}
+                </View>
               </View>
             </View>
           </View>
@@ -378,6 +489,64 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
     letterSpacing: 1,
+  },
+  socialLoginContainer: {
+    marginTop: 20,
+    width: '100%',
+    alignItems: 'center',
+  },
+  dividerContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 20,
+    width: '80%',
+  },
+  divider: {
+    flex: 1,
+    height: 1,
+    backgroundColor: '#e0e0e0',
+  },
+  dividerText: {
+    marginHorizontal: 10,
+    color: '#999',
+    fontSize: 14,
+  },
+  googleButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#ffffff',
+    borderRadius: 12,
+    paddingVertical: 14,
+    paddingHorizontal: 20,
+    width: '100%',
+    borderWidth: 1,
+    borderColor: '#e0e0e0',
+    marginBottom: 15,
+  },
+  googleButtonText: {
+    marginLeft: 10,
+    color: '#333',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  appleButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#ffffff',
+    borderRadius: 12,
+    paddingVertical: 14,
+    paddingHorizontal: 20,
+    width: '100%',
+    borderWidth: 1,
+    borderColor: '#e0e0e0',
+  },
+  appleButtonText: {
+    marginLeft: 10,
+    color: '#333',
+    fontSize: 16,
+    fontWeight: '600',
   },
 });
 

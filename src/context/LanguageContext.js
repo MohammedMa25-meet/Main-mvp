@@ -445,6 +445,9 @@ export const LanguageProvider = ({ children }) => {
     'French': 'الفرنسية',
     'Spanish': 'الإسبانية',
     'Other': 'أخرى',
+    'Continue with Google': 'المتابعة مع جوجل',
+    'Continue with Apple': 'المتابعة مع آبل',
+    'OR': 'أو',
   };
 
   const t = (key) => {

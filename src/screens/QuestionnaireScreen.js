@@ -261,6 +261,20 @@ const QuestionnaireScreen = ({ navigation, route }) => {
           ]
         },
         {
+          label: 'Art',
+          subOptions: [
+            'Visual Arts',
+            'Digital Art',
+            'Performing Arts',
+            'Graphic Design',
+            'Fashion Design',
+            'Ceramic and Textile Arts',
+            'Film and Animation',
+            'Concept Art & Illustration',
+            t('Other')
+          ]
+        },
+        {
           label: t('Other'),
           subOptions: []
         }
