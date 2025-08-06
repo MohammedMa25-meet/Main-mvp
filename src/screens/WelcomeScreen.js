@@ -30,7 +30,7 @@ const WelcomeScreen = ({ navigation }) => {
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const { language, toggleLanguage, t } = useLanguage();
-  const { updateUserData } = useUser(); // ✅ From your working code
+  const { updateUserData } = useUser(); 
 
   // ✅ This is your fully functional handleEmailLogin function
   const handleEmailLogin = async () => {
@@ -82,7 +82,6 @@ const WelcomeScreen = ({ navigation }) => {
 
   return (
     <SafeAreaView style={styles.container}>
-      {/* ✅ This is the new design's JSX, fully connected to your working logic */}
       <TouchableOpacity style={styles.languageToggle} onPress={toggleLanguage}>
         <Text style={styles.languageText}>{language}</Text>
         <Ionicons name="language" size={20} color="#11523d" />
@@ -212,12 +211,12 @@ const styles = StyleSheet.create({
   },
   languageToggle: {
     position: 'absolute',
-    top: 60,
-    right: 20,
+    top: 150,
+    right: 28,
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: 'rgba(255, 255, 255, 0.9)',
-    paddingHorizontal: 12,
+    paddingHorizontal: 10,
     paddingVertical: 8,
     borderRadius: 20,
     zIndex: 1000,

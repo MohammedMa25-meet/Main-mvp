@@ -258,104 +258,114 @@ const HomepageScreen = ({ navigation, onScreenChange }) => {
 
       <View style={styles.mainContent}>
         {showSidebar && <TouchableOpacity style={styles.sidebarOverlay} activeOpacity={1} onPress={() => setShowSidebar(false)} />}
+        
+        {/* Header stays fixed */}
         <View style={[styles.header, isDarkMode && styles.headerDark]}>
-          <TouchableOpacity onPress={handleMenuPress}><Ionicons name="menu" size={24} color={isDarkMode ? "#FFFFFF" : "#1f2937"} /></TouchableOpacity>
-          <View style={styles.logoContainer}><View style={styles.logoCircle}><Text style={styles.logoText}>{userData.firstName ? userData.firstName.charAt(0).toUpperCase() : 'B'}</Text></View><Text style={[styles.logoTitle, titleStyle]}>BridgeIT</Text></View>
-          <TouchableOpacity onPress={handleRefreshSuggestions}><Ionicons name="refresh" size={24} color={isDarkMode ? "#FFFFFF" : "#1f2937"} /></TouchableOpacity>
-        </View>
-        <View style={styles.welcomeSection}>
-          <Text style={[styles.welcomeTitle, titleStyle]}>{t('Welcome')}, {userData.firstName || 'User'}!</Text>
-          <Text style={[styles.welcomeSubtitle, textStyle]}>{t('Your career hub is ready.')}</Text>
-        </View>
-        
-        {/* AI Recommendations Section */}
-        {userData.analysisComplete && (
-          <View style={styles.aiRecommendationsSection}>
-            <View style={styles.aiHeader}>
-              <Ionicons name="sparkles" size={24} color="#556B2F" />
-              <Text style={[styles.aiTitle, titleStyle]}>{t('AI Recommendations')}</Text>
+          <TouchableOpacity onPress={handleMenuPress}>
+            <Ionicons name="menu" size={24} color={isDarkMode ? "#FFFFFF" : "#1f2937"} />
+          </TouchableOpacity>
+          <View style={styles.logoContainer}>
+            <View style={styles.logoCircle}>
+              <Text style={styles.logoText}>
+                {userData.firstName ? userData.firstName.charAt(0).toUpperCase() : 'B'}
+              </Text>
             </View>
-            <Text style={[styles.aiSubtitle, textStyle]}>
-              {activeTab === 'Courses' 
-                ? t('These courses are recommended by our AI based on your profile')
-                : t('These jobs are recommended by our AI based on your profile')
-              }
-            </Text>
+            <Text style={[styles.logoTitle, titleStyle]}>BridgeIT</Text>
           </View>
-        )}
-        
-        <View style={styles.tabContainer}>
-          <TouchableOpacity style={[styles.tab, activeTab === 'Jobs' ? styles.activeTab : styles.inactiveTab]} onPress={() => setActiveTab('Jobs')}>
-            <Ionicons name="briefcase-outline" size={20} color={activeTab === 'Jobs' ? "#1f2937" : "#9ca3af"} />
-            <Text style={[styles.tabText, activeTab === 'Jobs' ? styles.activeTabText : styles.inactiveTabText]}>{t('Jobs')}</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={[styles.tab, activeTab === 'Courses' ? styles.activeTab : styles.inactiveTab]} onPress={() => setActiveTab('Courses')}>
-            <Ionicons name="book-outline" size={20} color={activeTab === 'Courses' ? "#1f2937" : "#9ca3af"} />
-            <Text style={[styles.tabText, activeTab === 'Courses' ? styles.activeTabText : styles.inactiveTabText]}>{t('Courses')}</Text>
+          <TouchableOpacity onPress={handleRefreshSuggestions}>
+            <Ionicons name="refresh" size={24} color={isDarkMode ? "#FFFFFF" : "#1f2937"} />
           </TouchableOpacity>
         </View>
 
-        {/* Search Bar */}
-        <View style={styles.searchContainer}>
-          <View style={styles.searchInputContainer}>
-            <Ionicons name="search" size={20} color="#6B7280" />
-            <TextInput
-              style={[styles.searchInput, isDarkMode && styles.searchInputDark]}
-              placeholder={activeTab === 'Jobs' ? t('Search jobs...') : t('Search courses...')}
-              placeholderTextColor="#6B7280"
-              value={searchQuery}
-              onChangeText={setSearchQuery}
-            />
-            {searchQuery.length > 0 && (
-              <TouchableOpacity onPress={() => setSearchQuery('')}>
-                <Ionicons name="close-circle" size={20} color="#6B7280" />
-              </TouchableOpacity>
-            )}
+        {/* Everything below header scrolls */}
+        <ScrollView style={{ flex: 1 }} contentContainerStyle={{ paddingBottom: 40 }}>
+          <View style={styles.welcomeSection}>
+            <Text style={[styles.welcomeTitle, titleStyle]}>{t('Welcome')}, {userData.firstName || 'User'}!</Text>
+            <Text style={[styles.welcomeSubtitle, textStyle]}>{t('Your career hub is ready.')}</Text>
           </View>
-        </View>
-
-        <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
+          {userData.analysisComplete && (
+            <View style={styles.aiRecommendationsSection}>
+              <View style={styles.aiHeader}>
+                <Ionicons name="sparkles" size={24} color="#11523d" />
+                <Text style={[styles.aiTitle, titleStyle]}>{t('AI Recommendations')}</Text>
+              </View>
+              <Text style={[styles.aiSubtitle, textStyle]}>
+                {activeTab === 'Courses' 
+                  ? t('These courses are recommended by our AI based on your profile')
+                  : t('These jobs are recommended by our AI based on your profile')
+                }
+              </Text>
+            </View>
+          )}
+          <View style={styles.tabContainer}>
+            <TouchableOpacity style={[styles.tab, activeTab === 'Jobs' ? styles.activeTab : styles.inactiveTab]} onPress={() => setActiveTab('Jobs')}>
+              <Ionicons name="briefcase-outline" size={20} color={activeTab === 'Jobs' ? "#1f2937" : "#9ca3af"} />
+              <Text style={[styles.tabText, activeTab === 'Jobs' ? styles.activeTabText : styles.inactiveTabText]}>{t('Jobs')}</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={[styles.tab, activeTab === 'Courses' ? styles.activeTab : styles.inactiveTab]} onPress={() => setActiveTab('Courses')}>
+              <Ionicons name="book-outline" size={20} color={activeTab === 'Courses' ? "#1f2937" : "#9ca3af"} />
+              <Text style={[styles.tabText, activeTab === 'Courses' ? styles.activeTabText : styles.inactiveTabText]}>{t('Courses')}</Text>
+            </TouchableOpacity>
+          </View>
+          <View style={styles.searchContainer}>
+            <View style={styles.searchInputContainer}>
+              <Ionicons name="search" size={20} color="#6B7280" />
+              <TextInput
+                style={[styles.searchInput, isDarkMode && styles.searchInputDark]}
+                placeholder={activeTab === 'Jobs' ? t('Search jobs...') : t('Search courses...')}
+                placeholderTextColor="#6B7280"
+                value={searchQuery}
+                onChangeText={setSearchQuery}
+              />
+              {searchQuery.length > 0 && (
+                <TouchableOpacity onPress={() => setSearchQuery('')}>
+                  <Ionicons name="close-circle" size={20} color="#6B7280" />
+                </TouchableOpacity>
+              )}
+            </View>
+          </View>
           {isLoading ? (
             <View style={styles.loadingContainer}>
               <ActivityIndicator size="large" color={isDarkMode ? "#FFFFFF" : "#065F46"} />
               <Text style={textStyle}>Loading Recommendations...</Text>
             </View>
           ) : activeTab === 'Jobs' ? (
-            <View>
-              {console.log('Rendering jobs tab, filteredJobs length:', filteredJobs.length)}
+            <View style={styles.cardsContainer}>
               {filteredJobs.length > 0 ? (
-                filteredJobs.map((job) => (
-                  <TouchableOpacity key={job.id} style={[styles.jobCard, cardStyle]} onPress={() => handleJobPress(job)}>
-                    <View style={styles.jobHeader}>
-                      <View style={styles.categoryTag}>
-                        <Text style={styles.categoryText}>{job.category || 'General'}</Text>
+                <View style={styles.verticalCardsContainer}>
+                  {filteredJobs.map((job) => (
+                    <TouchableOpacity key={job.id} style={[styles.jobCard, cardStyle]} onPress={() => handleJobPress(job)}>
+                      <View style={styles.jobHeader}>
+                        <View style={styles.categoryTag}>
+                          <Text style={styles.categoryText}>{job.category || 'General'}</Text>
+                        </View>
+                        <Image 
+                          source={{uri: job.image || 'https://source.unsplash.com/400x400/?company,logo'}} 
+                          style={styles.jobIcon} 
+                        />
                       </View>
-                      <Image 
-                        source={{uri: job.image || 'https://source.unsplash.com/400x400/?company,logo'}} 
-                        style={styles.jobIcon} 
-                      />
-                    </View>
-                    <Text style={[styles.jobTitle, titleStyle]}>{job.title || 'Untitled Job'}</Text>
-                    <Text style={[styles.companyName, textStyle]}>{job.company || 'Unknown Company'}</Text>
-                    <View style={styles.jobDetails}>
-                      <View style={styles.jobDetailItem}>
-                        <Ionicons name="location-outline" size={16} color="#6b7280" />
-                        <Text style={styles.jobDetailText}>{job.location || 'Location not specified'}</Text>
+                      <Text style={[styles.jobTitle, titleStyle]}>{job.title || 'Untitled Job'}</Text>
+                      <Text style={[styles.companyName, textStyle]}>{job.company || 'Unknown Company'}</Text>
+                      <View style={styles.jobDetails}>
+                        <View style={styles.jobDetailItem}>
+                          <Ionicons name="location-outline" size={14} color="#6b7280" />
+                          <Text style={styles.jobDetailText}>{job.location || 'Location not specified'}</Text>
+                        </View>
+                        <View style={styles.jobDetailItem}>
+                          <Ionicons name="business-outline" size={14} color="#6b7280" />
+                          <Text style={styles.jobDetailText}>{job.workType || 'Not specified'}</Text>
+                        </View>
                       </View>
-                      <View style={styles.jobDetailItem}>
-                        <Ionicons name="business-outline" size={16} color="#6b7280" />
-                        <Text style={styles.jobDetailText}>{job.workType || 'Not specified'}</Text>
-                      </View>
-                    </View>
-                    <Text style={[styles.jobDescription, textStyle]} numberOfLines={3}>
-                      {job.description || 'No description available'}
-                    </Text>
-                    <TouchableOpacity style={styles.viewDetailsButton} onPress={() => handleJobPress(job)}>
-                      <Text style={styles.viewDetailsText}>{t('View Details')}</Text>
-                      <Ionicons name="arrow-forward" size={16} color="#ffffff" />
+                      <Text style={[styles.jobDescription, textStyle]} numberOfLines={2}>
+                        {job.description || 'No description available'}
+                      </Text>
+                      <TouchableOpacity style={styles.viewDetailsButton} onPress={() => handleJobPress(job)}>
+                        <Text style={styles.viewDetailsText}>{t('View Details')}</Text>
+                        <Ionicons name="arrow-forward" size={14} color="#ffffff" />
+                      </TouchableOpacity>
                     </TouchableOpacity>
-                  </TouchableOpacity>
-                ))
+                  ))}
+                </View>
               ) : (
                 <View style={styles.emptyState}>
                   <Ionicons name="briefcase-outline" size={48} color="#6B7280" />
@@ -369,42 +379,46 @@ const HomepageScreen = ({ navigation, onScreenChange }) => {
               )}
             </View>
           ) : (
-            <View>
+            <View style={styles.cardsContainer}>
               {filteredCourses.length > 0 ? (
-                filteredCourses.map((course) => (
-                  <TouchableOpacity key={course.id} style={[styles.courseCard, cardStyle]} onPress={() => handleCoursePress(course)}>
-                    <Image 
-                      source={{ uri: course.image || 'https://source.unsplash.com/400x300/?education,technology' }} 
-                      style={styles.courseImage} 
-                    />
-                    <View style={styles.courseCategoryTag}>
-                      <Text style={styles.courseCategoryText}>
-                        {course.level || course.category || 'General'}
-                      </Text>
-                    </View>
-                    <Text style={[styles.courseTitle, titleStyle]}>{course.title || 'Untitled Course'}</Text>
-                    <Text style={[styles.courseProvider, textStyle]}>{course.provider || 'Unknown Provider'}</Text>
-                    <View style={styles.courseDetails}>
-                      {course.duration && (
-                        <View style={styles.courseDetailItem}>
-                          <Ionicons name="time-outline" size={16} color="#6b7280" />
-                          <Text style={styles.courseDetailText}>{course.duration}</Text>
+                <View style={styles.verticalCardsContainer}>
+                  {filteredCourses.map((course) => (
+                    <TouchableOpacity key={course.id} style={[styles.courseCard, cardStyle]} onPress={() => handleCoursePress(course)}>
+                      <Image 
+                        source={{ uri: course.image || 'https://source.unsplash.com/400x300/?education,technology' }} 
+                        style={styles.courseImage} 
+                      />
+                      <View style={styles.courseContent}>
+                        <View style={styles.courseCategoryTag}>
+                          <Text style={styles.courseCategoryText}>
+                            {course.level || course.category || 'General'}
+                          </Text>
                         </View>
-                      )}
-                      <View style={styles.courseDetailItem}>
-                        <Ionicons name="globe-outline" size={16} color="#6b7280" />
-                        <Text style={styles.courseDetailText}>{course.delivery || 'Online'}</Text>
+                        <Text style={[styles.courseTitle, titleStyle]}>{course.title || 'Untitled Course'}</Text>
+                        <Text style={[styles.courseProvider, textStyle]}>{course.provider || 'Unknown Provider'}</Text>
+                        <View style={styles.courseDetails}>
+                          {course.duration && (
+                            <View style={styles.courseDetailItem}>
+                              <Ionicons name="time-outline" size={14} color="#6b7280" />
+                              <Text style={styles.courseDetailText}>{course.duration}</Text>
+                            </View>
+                          )}
+                          <View style={styles.courseDetailItem}>
+                            <Ionicons name="globe-outline" size={14} color="#6b7280" />
+                            <Text style={styles.courseDetailText}>{course.delivery || 'Online'}</Text>
+                          </View>
+                        </View>
+                        <Text style={[styles.courseDescription, textStyle]} numberOfLines={2}>
+                          {course.description || 'No description available'}
+                        </Text>
+                        <TouchableOpacity style={styles.viewDetailsButton} onPress={() => handleCoursePress(course)}>
+                          <Text style={styles.viewDetailsText}>{t('View Details')}</Text>
+                          <Ionicons name="arrow-forward" size={14} color="#ffffff" />
+                        </TouchableOpacity>
                       </View>
-                    </View>
-                    <Text style={[styles.courseDescription, textStyle]} numberOfLines={3}>
-                      {course.description || 'No description available'}
-                    </Text>
-                    <TouchableOpacity style={styles.viewDetailsButton} onPress={() => handleCoursePress(course)}>
-                      <Text style={styles.viewDetailsText}>{t('View Details')}</Text>
-                      <Ionicons name="arrow-forward" size={16} color="#ffffff" />
                     </TouchableOpacity>
-                  </TouchableOpacity>
-                ))
+                  ))}
+                </View>
               ) : (
                 <View style={styles.emptyState}>
                   <Ionicons name="book-outline" size={48} color="#6B7280" />
@@ -458,8 +472,8 @@ const styles = StyleSheet.create({
   welcomeSubtitle: { fontSize: 16, color: '#6b7280', fontWeight: '400' },
   aiRecommendationsSection: { paddingHorizontal: 20, paddingVertical: 16, backgroundColor: '#F0FDF4', marginHorizontal: 20, borderRadius: 12, marginBottom: 16 },
   aiHeader: { flexDirection: 'row', alignItems: 'center', marginBottom: 8 },
-  aiTitle: { fontSize: 18, fontWeight: '600', color: '#556B2F', marginLeft: 8 },
-  aiSubtitle: { fontSize: 14, color: '#556B2F', lineHeight: 20 },
+  aiTitle: { fontSize: 18, fontWeight: '600', color: '#11523d', marginLeft: 8 },
+  aiSubtitle: { fontSize: 14, color: '#11523d', lineHeight: 20 },
   textDark: { color: '#D1D5DB' },
   tabContainer: { flexDirection: 'row', marginHorizontal: 20, marginBottom: 24 },
   tab: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', paddingVertical: 12, paddingHorizontal: 16, borderRadius: 12, marginHorizontal: 4 },
@@ -490,33 +504,137 @@ const styles = StyleSheet.create({
     color: '#1F2937' 
   },
   searchInputDark: { color: '#D1D5DB' },
-  content: { paddingHorizontal: 20 },
-  jobCard: { backgroundColor: '#ffffff', borderRadius: 16, padding: 20, marginBottom: 16, shadowColor: '#000000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.1, shadowRadius: 8, elevation: 4 },
+  
+  // New styles for narrow flowing cards
+  cardsContainer: {
+    paddingHorizontal: 20,
+    paddingBottom: 20,
+  },
+  
+  verticalCardsContainer: {
+    alignItems: 'center',
+  },
+  
+  jobCard: { 
+    backgroundColor: '#ffffff', 
+    borderRadius: 16, 
+    padding: 16,
+    marginBottom: 16,
+    width: '100%',
+    maxWidth: 350,
+    shadowColor: '#000000', 
+    shadowOffset: { width: 0, height: 2 }, 
+    shadowOpacity: 0.1, 
+    shadowRadius: 8, 
+    elevation: 4 
+  },
+  
   cardDark: { backgroundColor: '#1F2937' },
+  
   jobHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 },
-  categoryTag: { backgroundColor: '#dbeafe', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 20 },
+  
+  categoryTag: { 
+    backgroundColor: '#dbeafe', 
+    paddingHorizontal: 10, 
+    paddingVertical: 4, 
+    borderRadius: 16 
+  },
+  
   categoryText: { color: '#1d4ed8', fontSize: 12, fontWeight: '600' },
-  jobIcon: { width: 40, height: 40, backgroundColor: '#f3f4f6', borderRadius: 8, alignItems: 'center', justifyContent: 'center' },
-  jobTitle: { fontSize: 20, fontWeight: '700', color: '#065f46', marginBottom: 4 },
+  
+  jobIcon: { width: 40, height: 40, backgroundColor: '#f3f4f6', borderRadius: 8 },
+  
+  jobTitle: { 
+    fontSize: 18, 
+    fontWeight: '700', 
+    color: '#065f46', 
+    marginBottom: 4 
+  },
+  
   titleDark: { color: '#10B981' },
   title: { color: '#065f46' },
+  
   companyName: { fontSize: 16, color: '#6b7280', marginBottom: 12 },
   text: { color: '#374151' },
+  
   jobDetails: { flexDirection: 'row', marginBottom: 8 },
   jobDetailItem: { flexDirection: 'row', alignItems: 'center', marginRight: 16 },
   jobDetailText: { fontSize: 14, color: '#6b7280', marginLeft: 4 },
-  jobDescription: { fontSize: 14, color: '#4b5563', lineHeight: 20, marginBottom: 16 },
-  viewDetailsButton: { backgroundColor: '#065f46', flexDirection: 'row', alignItems: 'center', justifyContent: 'center', paddingVertical: 12, borderRadius: 12 },
-  viewDetailsText: { color: '#ffffff', fontSize: 16, fontWeight: '600', marginRight: 8 },
-  courseCard: { backgroundColor: '#ffffff', borderRadius: 16, overflow: 'hidden', marginBottom: 16, shadowColor: '#000000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.1, shadowRadius: 8, elevation: 4 },
-  courseImage: { height: 180 },
-  courseCategoryTag: { backgroundColor: '#fef3c7', alignSelf: 'flex-start', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 20, margin: 20, marginBottom: 12 },
+  
+  jobDescription: { 
+    fontSize: 13, 
+    color: '#4b5563', 
+    lineHeight: 18, 
+    marginBottom: 12 
+  },
+  
+  viewDetailsButton: { 
+    backgroundColor: '#065f46', 
+    flexDirection: 'row', 
+    alignItems: 'center', 
+    justifyContent: 'center', 
+    paddingVertical: 10, 
+    borderRadius: 10 
+  },
+  
+  viewDetailsText: { 
+    color: '#ffffff', 
+    fontSize: 14, 
+    fontWeight: '600', 
+    marginRight: 6 
+  },
+  
+  courseCard: { 
+    backgroundColor: '#ffffff', 
+    borderRadius: 16, 
+    overflow: 'hidden', 
+    marginBottom: 16,
+    width: '100%',
+    maxWidth: 350,
+    shadowColor: '#000000', 
+    shadowOffset: { width: 0, height: 2 }, 
+    shadowOpacity: 0.1, 
+    shadowRadius: 8, 
+    elevation: 4 
+  },
+  
+  courseImage: { height: 140 },
+  
+  courseContent: {
+    padding: 16,
+  },
+  
+  courseCategoryTag: { 
+    backgroundColor: '#fef3c7', 
+    alignSelf: 'flex-start', 
+    paddingHorizontal: 10, 
+    paddingVertical: 4, 
+    borderRadius: 16,
+    marginBottom: 8 
+  },
+  
   courseCategoryText: { color: '#92400e', fontSize: 12, fontWeight: '600' },
-  courseTitle: { fontSize: 20, fontWeight: '700', color: '#065f46', marginHorizontal: 20, marginBottom: 4 },
-  courseProvider: { fontSize: 16, color: '#6b7280', marginHorizontal: 20, marginBottom: 12 },
-  courseDetails: { flexDirection: 'row', flexWrap: 'wrap', marginHorizontal: 20, marginBottom: 12 },
+  
+  courseTitle: { 
+    fontSize: 18, 
+    fontWeight: '700', 
+    color: '#065f46', 
+    marginBottom: 4 
+  },
+  
+  courseProvider: { fontSize: 16, color: '#6b7280', marginBottom: 12 },
+  
+  courseDetails: { flexDirection: 'row', flexWrap: 'wrap', marginBottom: 12 },
   courseDetailItem: { flexDirection: 'row', alignItems: 'center', marginRight: 16, marginBottom: 4 },
   courseDetailText: { fontSize: 14, color: '#6b7280', marginLeft: 4 },
+  
+  courseDescription: {
+    fontSize: 13, 
+    color: '#4b5563', 
+    lineHeight: 18, 
+    marginBottom: 12 
+  },
+  
   emptyState: { 
     flex: 1, 
     justifyContent: 'center', 
@@ -524,6 +642,7 @@ const styles = StyleSheet.create({
     paddingVertical: 60,
     paddingHorizontal: 40
   },
+  
   emptyStateText: { 
     fontSize: 18, 
     fontWeight: '600', 
@@ -532,6 +651,7 @@ const styles = StyleSheet.create({
     marginTop: 16,
     marginBottom: 8
   },
+  
   emptyStateSubtext: { 
     fontSize: 14, 
     color: '#9CA3AF', 

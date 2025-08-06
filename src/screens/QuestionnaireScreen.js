@@ -641,7 +641,7 @@ const QuestionnaireScreen = ({ navigation, route }) => {
                             {optionLabel}
                           </Text>
                           {question.type === 'multiple' && isSelected && (
-                            <Ionicons name="checkmark-circle" size={20} color="#556B2F" />
+                            <Ionicons name="checkmark-circle" size={20} color="#11523d" />
                           )}
                         </TouchableOpacity>
                         
@@ -674,7 +674,7 @@ const QuestionnaireScreen = ({ navigation, route }) => {
                                     {subOption}
                                   </Text>
                                   {subIsSelected && (
-                                    <Ionicons name="checkmark-circle" size={16} color="#556B2F" />
+                                    <Ionicons name="checkmark-circle" size={16} color="# " />
                                   )}
                                 </TouchableOpacity>
                               );
@@ -861,7 +861,7 @@ const styles = StyleSheet.create({
   progressContainer: { paddingHorizontal: 20, paddingVertical: 16, backgroundColor: '#FFFFFF' },
   progressContainerDark: { backgroundColor: '#1F2937' },
   progressBar: { height: 8, backgroundColor: '#E5E7EB', borderRadius: 4, overflow: 'hidden' },
-  progressFill: { height: '100%', backgroundColor: '#556B2F', borderRadius: 4 },
+  progressFill: { height: '100%', backgroundColor: '#11523d', borderRadius: 4 },
   progressText: { marginTop: 8, fontSize: 14, color: '#6B7280', textAlign: 'center' },
   progressTextDark: { color: '#D1D5DB' },
   content: { flex: 1, paddingHorizontal: 20, paddingVertical: 24 },
@@ -876,7 +876,20 @@ const styles = StyleSheet.create({
   questionContainerDark: { backgroundColor: '#1F2937' },
   questionText: { fontSize: 20, fontWeight: '600', color: '#1F2937', marginBottom: 24, lineHeight: 28 },
   questionTextDark: { color: '#F9FAFB' },
-  textInputContainer: { marginTop: 16 },
+  textInputContainer: { marginTop: 16 },  // ...existing code...
+    nextButton: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', backgroundColor: '#11523d', paddingVertical: 16, borderRadius: 12 },
+    nextButtonText: { color: '#FFFFFF', fontSize: 16, fontWeight: '600', marginRight: 8 },
+    finishButton: { backgroundColor: '#11523d', paddingVertical: 16, borderRadius: 12, alignItems: 'center' },
+    finishButtonText: { color: '#FFFFFF', fontSize: 16, fontWeight: '600' },
+    startButton: { backgroundColor: '#11523d', paddingVertical: 16, paddingHorizontal: 32, borderRadius: 12 },
+    startButtonText: { color: '#FFFFFF', fontSize: 18, fontWeight: '600' },
+    uploadButton: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', paddingVertical: 16, paddingHorizontal: 24, borderWidth: 2, borderColor: '#11523d', borderStyle: 'dashed', borderRadius: 12, marginVertical: 16 },
+    uploadButtonText: { marginLeft: 8, fontSize: 16, color: '#11523d', fontWeight: '600' },
+    selectedOption: { borderColor: '#11523d', backgroundColor: '#F0FDF4' },
+    selectedOptionText: { color: '#11523d', fontWeight: '600' },
+    selectedSubOption: { borderColor: '#11523d', backgroundColor: '#F0FDF4' },
+    selectedSubOptionText: { color: '#11523d', fontWeight: '600' },
+  // ...existing code...
   textInput: { 
     borderWidth: 1, 
     borderColor: '#E5E7EB', 
@@ -901,26 +914,26 @@ const styles = StyleSheet.create({
   optionsContainer: { gap: 12 },
   optionButton: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16, paddingVertical: 12, borderWidth: 1, borderColor: '#E5E7EB', borderRadius: 12, backgroundColor: '#FFFFFF' },
   optionButtonDark: { borderColor: '#374151', backgroundColor: '#374151' },
-  selectedOption: { borderColor: '#556B2F', backgroundColor: '#F0FDF4' },
+  selectedOption: { borderColor: '#11523d', backgroundColor: '#F0FDF4' },
   optionText: { fontSize: 16, color: '#374151', flex: 1 },
   optionTextDark: { color: '#D1D5DB' },
-  selectedOptionText: { color: '#556B2F', fontWeight: '600' },
+  selectedOptionText: { color: '#11523d', fontWeight: '600' },
   subOptionsContainer: { marginLeft: 20, marginTop: 8, gap: 8 },
   subOptionButton: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 12, paddingVertical: 8, borderWidth: 1, borderColor: '#E5E7EB', borderRadius: 8, backgroundColor: '#F9FAFB' },
   subOptionButtonDark: { borderColor: '#374151', backgroundColor: '#374151' },
-  selectedSubOption: { borderColor: '#556B2F', backgroundColor: '#F0FDF4' },
+  selectedSubOption: { borderColor: '#11523d', backgroundColor: '#F0FDF4' },
   subOptionArrow: { marginRight: 8 },
   subOptionText: { fontSize: 14, color: '#374151', flex: 1 },
   subOptionTextDark: { color: '#D1D5DB' },
-  selectedSubOptionText: { color: '#556B2F', fontWeight: '600' },
+  selectedSubOptionText: { color: '#11523d', fontWeight: '600' },
   otherInputContainer: { marginLeft: 20, marginTop: 8, flexDirection: 'row', alignItems: 'center' },
   otherInputArrow: { marginRight: 8 },
   otherInput: { flex: 1, borderWidth: 1, borderColor: '#E5E7EB', borderRadius: 8, paddingHorizontal: 12, paddingVertical: 8, fontSize: 14, color: '#374151', backgroundColor: '#F9FAFB' },
   otherInputDark: { borderColor: '#374151', color: '#F9FAFB', backgroundColor: '#374151' },
   cvContainer: { backgroundColor: '#FFFFFF', borderRadius: 16, padding: 24, marginBottom: 20, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.1, shadowRadius: 8, elevation: 4 },
   cvContainerDark: { backgroundColor: '#1F2937' },
-  uploadButton: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', paddingVertical: 16, paddingHorizontal: 24, borderWidth: 2, borderColor: '#556B2F', borderStyle: 'dashed', borderRadius: 12, marginVertical: 16 },
-  uploadButtonText: { marginLeft: 8, fontSize: 16, color: '#556B2F', fontWeight: '600' },
+  uploadButton: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', paddingVertical: 16, paddingHorizontal: 24, borderWidth: 2, borderColor: '#11523d', borderStyle: 'dashed', borderRadius: 12, marginVertical: 16 },
+  uploadButtonText: { marginLeft: 8, fontSize: 16, color: '#11523d', fontWeight: '600' },
   filesContainer: { marginTop: 20 },
   filesTitle: { fontSize: 16, fontWeight: '600', color: '#1F2937', marginBottom: 12 },
   filesTitleDark: { color: '#F9FAFB' },
@@ -944,17 +957,31 @@ const styles = StyleSheet.create({
     borderTopColor: '#374151',
     zIndex: 1000
   },
-  nextButton: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', backgroundColor: '#556B2F', paddingVertical: 16, borderRadius: 12 },
+  nextButton: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', backgroundColor: '#11523d', paddingVertical: 16, borderRadius: 12 },
   nextButtonText: { color: '#FFFFFF', fontSize: 16, fontWeight: '600', marginRight: 8 },
-  finishButton: { backgroundColor: '#556B2F', paddingVertical: 16, borderRadius: 12, alignItems: 'center' },
+  finishButton: { backgroundColor: '#11523d', paddingVertical: 16, borderRadius: 12, alignItems: 'center' },
   finishButtonText: { color: '#FFFFFF', fontSize: 16, fontWeight: '600' },
   introContainer: { flex: 1, justifyContent: 'center', alignItems: 'center', paddingHorizontal: 40 },
   introContainerDark: { backgroundColor: '#111827' },
   introTitle: { fontSize: 28, fontWeight: 'bold', color: '#1F2937', marginBottom: 24, textAlign: 'center' },
   introTitleDark: { color: '#F9FAFB' },
   introText: { fontSize: 16, color: '#6B7280', textAlign: 'center', lineHeight: 24, marginBottom: 40 },
-  introTextDark: { color: '#D1D5DB' },
-  startButton: { backgroundColor: '#556B2F', paddingVertical: 16, paddingHorizontal: 32, borderRadius: 12 },
+  introTextDark: { color: '#D1D5DB' },  
+    nextButton: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', backgroundColor: '#11523d', paddingVertical: 16, borderRadius: 12 },
+    nextButtonText: { color: '#FFFFFF', fontSize: 16, fontWeight: '600', marginRight: 8 },
+    finishButton: { backgroundColor: '#11523d', paddingVertical: 16, borderRadius: 12, alignItems: 'center' },
+    finishButtonText: { color: '#FFFFFF', fontSize: 16, fontWeight: '600' },
+    startButton: { backgroundColor: '#11523d', paddingVertical: 16, paddingHorizontal: 32, borderRadius: 12 },
+
+    uploadButton: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', paddingVertical: 16, paddingHorizontal: 24, borderWidth: 2, borderColor: '#11523d', borderStyle: 'dashed', borderRadius: 12, marginVertical: 16 },
+    uploadButtonText: { marginLeft: 8, fontSize: 16, color: '#11523d', fontWeight: '600' },
+ 
+    selectedOption: { borderColor: '#11523d', backgroundColor: '#F0FDF4' },
+    selectedOptionText: { color: '#11523d', fontWeight: '600' },
+    selectedSubOption: { borderColor: '#11523d', backgroundColor: '#F0FDF4' },
+    selectedSubOptionText: { color: '#11523d', fontWeight: '600' },
+
+  startButton: { backgroundColor: '#11523d', paddingVertical: 16, paddingHorizontal: 32, borderRadius: 12 },
   startButtonText: { color: '#FFFFFF', fontSize: 18, fontWeight: '600' },
 });
 
