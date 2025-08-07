@@ -448,6 +448,26 @@ export const LanguageProvider = ({ children }) => {
     'Continue with Google': 'المتابعة مع جوجل',
     'Continue with Apple': 'المتابعة مع آبل',
     'OR': 'أو',
+    
+    // Career Tracker
+    'Career Tracker': 'متتبع المسار المهني',
+    'Track your progress and goals': 'تتبع تقدمك وأهدافك',
+    'Your Personalized Career Plan': 'خطة مسارك المهني الشخصية',
+    'Career Progress Tracker': 'متتبع تقدم المسار المهني',
+    'Your roadmap to success. Visualize milestones and track your journey.': 'خريطة طريقك للنجاح. تصور المعالم وتتبع رحلتك.',
+    'Progress View': 'عرض التقدم',
+    'Career Calendar': 'تقويم المسار المهني',
+    'Progress Overview': 'نظرة عامة على التقدم',
+    'Courses Completed': 'الدورات المكتملة',
+    'Jobs Applied': 'الوظائف المتقدم إليها',
+    'Skills Acquired': 'المهارات المكتسبة',
+    'Interview Prep': 'تحضير المقابلة',
+    'Your Goals': 'أهدافك',
+    'Target': 'الهدف',
+    'DONE': 'مكتمل',
+    'IN_PROGRESS': 'قيد التنفيذ',
+    'PENDING': 'في الانتظار',
+    'Loading Career Tracker...': 'جاري تحميل متتبع المسار المهني...',
   };
 
   const t = (key) => {

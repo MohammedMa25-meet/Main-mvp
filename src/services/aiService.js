@@ -198,16 +198,16 @@ export const runFullAiAnalysis = async (userData) => {
     let recommendedJobs = [];
 
     try {
-      const recommendedIds = await getAiRecommendations(userData, courseCatalog, jobListings);
+    const recommendedIds = await getAiRecommendations(userData, courseCatalog, jobListings);
       console.log('AI recommended IDs:', recommendedIds);
-      
+    
       recommendedCourses = (recommendedIds.recommendedCourseIds || []).map(id => 
-        courseCatalog.find(course => course.id === id)
-      ).filter(Boolean); 
+      courseCatalog.find(course => course.id === id)
+    ).filter(Boolean); 
 
       recommendedJobs = (recommendedIds.recommendedJobIds || []).map(id =>
-        jobListings.find(job => job.id === id)
-      ).filter(Boolean);
+      jobListings.find(job => job.id === id)
+    ).filter(Boolean);
       
       console.log('Found recommended courses:', recommendedCourses.length);
       console.log('Found recommended jobs:', recommendedJobs.length);

@@ -10,10 +10,11 @@ import {
   Platform,
   Alert,
   ScrollView,
-  ActivityIndicator, // Added for loading state
+  ActivityIndicator,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useLanguage } from '../context/LanguageContext';
+import { LinearGradient } from 'expo-linear-gradient';
 // Import Firebase services
 import { auth } from '../services/firebase';
 import { createUserWithEmailAndPassword } from 'firebase/auth';
@@ -29,9 +30,9 @@ const RegistrationScreen = ({ navigation }) => {
   const [phone, setPhone] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const [isLoading, setIsLoading] = useState(false); // Added for loading state
+  const [isLoading, setIsLoading] = useState(false);
 
-  const handleCreateAccount = async () => { // Made this function async
+  const handleCreateAccount = async () => {
     if (!email || !password || !confirmPassword || !firstName || !lastName || !age || !phone) {
       Alert.alert(t('Error'), t('Please fill in all fields'));
       return;
@@ -50,7 +51,7 @@ const RegistrationScreen = ({ navigation }) => {
       return;
     }
 
-    setIsLoading(true); // Start loading
+    setIsLoading(true);
     try {
       // Create the user in Firebase Authentication
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
@@ -60,8 +61,8 @@ const RegistrationScreen = ({ navigation }) => {
       
       // Navigate to the Questionnaire with all user info, including the new UID
       navigation.navigate('Questionnaire', {
-        userAuth: { uid: user.uid, email: user.email }, // Pass auth info
-        userData: { // Pass form data
+        userAuth: { uid: user.uid, email: user.email },
+        userData: {
           firstName,
           lastName,
           age: ageNum.toString(),
@@ -77,7 +78,7 @@ const RegistrationScreen = ({ navigation }) => {
         Alert.alert(t('Error'), error.message);
       }
     } finally {
-      setIsLoading(false); // Stop loading
+      setIsLoading(false);
     }
   };
 
@@ -107,21 +108,144 @@ const RegistrationScreen = ({ navigation }) => {
             <View style={styles.formContainer}>
               <Text style={styles.title}>{t('Create your account')}</Text>
 
-              {/* All TextInput fields remain the same */}
-              <View style={styles.inputGroup}><Text style={styles.label}>{t('First Name')}</Text><View style={styles.inputContainer}><Ionicons name="person-outline" size={20} color="#9CA3AF" style={styles.inputIcon} /><TextInput style={styles.input} placeholder="Enter your first name" placeholderTextColor="#9CA3AF" value={firstName} onChangeText={setFirstName} autoCapitalize="words" autoComplete="given-name" /></View></View>
-              <View style={styles.inputGroup}><Text style={styles.label}>{t('Last Name')}</Text><View style={styles.inputContainer}><Ionicons name="person-outline" size={20} color="#9CA3AF" style={styles.inputIcon} /><TextInput style={styles.input} placeholder="Enter your last name" placeholderTextColor="#9CA3AF" value={lastName} onChangeText={setLastName} autoCapitalize="words" autoComplete="family-name" /></View></View>
-              <View style={styles.inputGroup}><Text style={styles.label}>{t('Age')}</Text><View style={styles.inputContainer}><Ionicons name="calendar-outline" size={20} color="#9CA3AF" style={styles.inputIcon} /><TextInput style={styles.input} placeholder="Enter your age (minimum 18)" placeholderTextColor="#9CA3AF" value={age} onChangeText={setAge} keyboardType="numeric" autoComplete="off" /></View></View>
-              <View style={styles.inputGroup}><Text style={styles.label}>{t('Phone Number')}</Text><View style={styles.inputContainer}><Ionicons name="call-outline" size={20} color="#9CA3AF" style={styles.inputIcon} /><TextInput style={styles.input} placeholder="Enter your phone number" placeholderTextColor="#9CA3AF" value={phone} onChangeText={setPhone} keyboardType="phone-pad" autoComplete="tel" /></View></View>
-              <View style={styles.inputGroup}><Text style={styles.label}>{t('Email')}</Text><View style={styles.inputContainer}><Ionicons name="mail-outline" size={20} color="#9CA3AF" style={styles.inputIcon} /><TextInput style={styles.input} placeholder="you@example.com" placeholderTextColor="#9CA3AF" value={email} onChangeText={setEmail} keyboardType="email-address" autoCapitalize="none" autoComplete="email" /></View></View>
-              <View style={styles.inputGroup}><Text style={styles.label}>{t('Password')}</Text><View style={styles.inputContainer}><Ionicons name="lock-closed-outline" size={20} color="#9CA3AF" style={styles.inputIcon} /><TextInput style={styles.input} placeholder="Min. 8 characters" placeholderTextColor="#9CA3AF" value={password} onChangeText={setPassword} secureTextEntry={!showPassword} autoComplete="new-password" /><TouchableOpacity style={styles.eyeIcon} onPress={() => setShowPassword(!showPassword)}><Ionicons name={showPassword ? "eye-outline" : "eye-off-outline"} size={20} color="#9CA3AF" /></TouchableOpacity></View></View>
-              <View style={styles.inputGroup}><Text style={styles.label}>{t('Confirm Password')}</Text><View style={styles.inputContainer}><Ionicons name="lock-closed-outline" size={20} color="#9CA3AF" style={styles.inputIcon} /><TextInput style={styles.input} placeholder="Re-enter password" placeholderTextColor="#9CA3AF" value={confirmPassword} onChangeText={setConfirmPassword} secureTextEntry={!showConfirmPassword} autoComplete="new-password" /><TouchableOpacity style={styles.eyeIcon} onPress={() => setShowConfirmPassword(!showConfirmPassword)}><Ionicons name={showConfirmPassword ? "eye-outline" : "eye-off-outline"} size={20} color="#9CA3AF" /></TouchableOpacity></View></View>
+              <View style={styles.inputGroup}>
+                <Text style={styles.label}>{t('First Name')}</Text>
+                <View style={styles.inputContainer}>
+                  <Ionicons name="person-outline" size={20} color="#9CA3AF" style={styles.inputIcon} />
+                  <TextInput
+                    style={styles.input}
+                    placeholder="Enter your first name"
+                    placeholderTextColor="#9CA3AF"
+                    value={firstName}
+                    onChangeText={setFirstName}
+                    autoCapitalize="words"
+                    autoComplete="given-name"
+                  />
+                </View>
+              </View>
+
+              <View style={styles.inputGroup}>
+                <Text style={styles.label}>{t('Last Name')}</Text>
+                <View style={styles.inputContainer}>
+                  <Ionicons name="person-outline" size={20} color="#9CA3AF" style={styles.inputIcon} />
+                  <TextInput
+                    style={styles.input}
+                    placeholder="Enter your last name"
+                    placeholderTextColor="#9CA3AF"
+                    value={lastName}
+                    onChangeText={setLastName}
+                    autoCapitalize="words"
+                    autoComplete="family-name"
+                  />
+                </View>
+              </View>
+
+              <View style={styles.inputGroup}>
+                <Text style={styles.label}>{t('Age')}</Text>
+                <View style={styles.inputContainer}>
+                  <Ionicons name="calendar-outline" size={20} color="#9CA3AF" style={styles.inputIcon} />
+                  <TextInput
+                    style={styles.input}
+                    placeholder="Enter your age (minimum 18)"
+                    placeholderTextColor="#9CA3AF"
+                    value={age}
+                    onChangeText={setAge}
+                    keyboardType="numeric"
+                    autoComplete="off"
+                  />
+                </View>
+              </View>
+
+              <View style={styles.inputGroup}>
+                <Text style={styles.label}>{t('Phone Number')}</Text>
+                <View style={styles.inputContainer}>
+                  <Ionicons name="call-outline" size={20} color="#9CA3AF" style={styles.inputIcon} />
+                  <TextInput
+                    style={styles.input}
+                    placeholder="Enter your phone number"
+                    placeholderTextColor="#9CA3AF"
+                    value={phone}
+                    onChangeText={setPhone}
+                    keyboardType="phone-pad"
+                    autoComplete="tel"
+                  />
+                </View>
+              </View>
+
+              <View style={styles.inputGroup}>
+                <Text style={styles.label}>{t('Email')}</Text>
+                <View style={styles.inputContainer}>
+                  <Ionicons name="mail-outline" size={20} color="#9CA3AF" style={styles.inputIcon} />
+                  <TextInput
+                    style={styles.input}
+                    placeholder="you@example.com"
+                    placeholderTextColor="#9CA3AF"
+                    value={email}
+                    onChangeText={setEmail}
+                    keyboardType="email-address"
+                    autoCapitalize="none"
+                    autoComplete="email"
+                  />
+                </View>
+              </View>
+
+              <View style={styles.inputGroup}>
+                <Text style={styles.label}>{t('Password')}</Text>
+                <View style={styles.inputContainer}>
+                  <Ionicons name="lock-closed-outline" size={20} color="#9CA3AF" style={styles.inputIcon} />
+                  <TextInput
+                    style={styles.input}
+                    placeholder="Min. 8 characters"
+                    placeholderTextColor="#9CA3AF"
+                    value={password}
+                    onChangeText={setPassword}
+                    secureTextEntry={!showPassword}
+                    autoComplete="new-password"
+                  />
+                  <TouchableOpacity style={styles.eyeIcon} onPress={() => setShowPassword(!showPassword)}>
+                    <Ionicons name={showPassword ? "eye-outline" : "eye-off-outline"} size={20} color="#9CA3AF" />
+                  </TouchableOpacity>
+                </View>
+              </View>
+
+              <View style={styles.inputGroup}>
+                <Text style={styles.label}>{t('Confirm Password')}</Text>
+                <View style={styles.inputContainer}>
+                  <Ionicons name="lock-closed-outline" size={20} color="#9CA3AF" style={styles.inputIcon} />
+                  <TextInput
+                    style={styles.input}
+                    placeholder="Re-enter password"
+                    placeholderTextColor="#9CA3AF"
+                    value={confirmPassword}
+                    onChangeText={setConfirmPassword}
+                    secureTextEntry={!showConfirmPassword}
+                    autoComplete="new-password"
+                  />
+                  <TouchableOpacity style={styles.eyeIcon} onPress={() => setShowConfirmPassword(!showConfirmPassword)}>
+                    <Ionicons name={showConfirmPassword ? "eye-outline" : "eye-off-outline"} size={20} color="#9CA3AF" />
+                  </TouchableOpacity>
+                </View>
+              </View>
               
-              <TouchableOpacity style={[styles.createButton, isLoading && { opacity: 0.7 }]} onPress={handleCreateAccount} disabled={isLoading}>
+              {/* Updated Create Account button with gradient design */}
+              <TouchableOpacity 
+                style={styles.createButton}
+                onPress={handleCreateAccount} 
+                disabled={isLoading}
+                activeOpacity={0.8}
+              >
+                <LinearGradient
+                  colors={['#11523d', '#bb9704']}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 0 }}
+                  style={styles.buttonGradient}
+                >
                 {isLoading ? (
                   <ActivityIndicator color="#FFFFFF" />
                 ) : (
                   <Text style={styles.createButtonText}>{t('Create Account')}</Text>
                 )}
+                </LinearGradient>
               </TouchableOpacity>
             </View>
           </View>
@@ -152,8 +276,29 @@ const styles = StyleSheet.create({
   inputIcon: { marginRight: 12 },
   input: { flex: 1, fontSize: 16, color: '#1F2937', fontWeight: '400' },
   eyeIcon: { padding: 4 },
-  createButton: { backgroundColor: '#1F2937', borderRadius: 12, paddingVertical: 16, marginTop: 8, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.1, shadowRadius: 4, elevation: 2 },
-  createButtonText: { color: '#FFFFFF', fontSize: 16, fontWeight: '600', textAlign: 'center' },
+  
+
+  createButton: { 
+    borderRadius: 15, 
+    overflow: 'hidden',
+    marginTop: 8,
+    shadowColor: '#000', 
+    shadowOffset: { width: 0, height: 2 }, 
+    shadowOpacity: 0.1, 
+    shadowRadius: 4, 
+    elevation: 2 
+  },
+  buttonGradient: {
+    paddingVertical: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  createButtonText: { 
+    color: '#FFFFFF', 
+    fontSize: 16, 
+    fontWeight: '600', 
+    letterSpacing: 1,
+  },
 });
 
 export default RegistrationScreen;

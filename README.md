@@ -75,7 +75,7 @@ npm run web
 
 ## 🎨 Design Features
 
-- **Olive Green Theme** (`#556B2F`) throughout the app
+- **Forest Green Theme** (`#11523d`) throughout the app
 - **Material Design Icons** from Expo Vector Icons
 - **React Native Paper** components for consistent UI
 - **Linear Gradients** for beautiful backgrounds

@@ -4,6 +4,7 @@ import DashboardScreen from './DashboardScreen';
 import ProfileScreen from './ProfileScreen';
 import SettingsScreen from './SettingsScreen';
 import CalendarScreen from './CalendarScreen';
+import CareerTrackerScreen from './CareerTrackerScreen';
 
 const MainScreen = ({ navigation }) => {
   const [currentScreen, setCurrentScreen] = useState('Home');
@@ -18,6 +19,8 @@ const MainScreen = ({ navigation }) => {
         return <CalendarScreen navigation={navigation} onScreenChange={setCurrentScreen} />;
       case 'Settings':
         return <SettingsScreen navigation={navigation} onScreenChange={setCurrentScreen} />;
+      case 'CareerTracker':
+        return <CareerTrackerScreen navigation={navigation} onScreenChange={setCurrentScreen} />;
       default:
         return <DashboardScreen navigation={navigation} onScreenChange={setCurrentScreen} />;
     }

@@ -1,10 +1,10 @@
 import React from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
-import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import { createBottomTabNavigator } from '@react-navigation/bottom-tabs'; // Not currently used, but kept for context
 import { StatusBar } from 'expo-status-bar';
 import { Provider as PaperProvider } from 'react-native-paper';
-import { Ionicons } from '@expo/vector-icons';
+import { Ionicons } from '@expo/vector-icons'; // Not currently used, but kept for context
 
 // Import context
 import { DarkModeProvider } from './src/context/DarkModeContext';
@@ -29,34 +29,40 @@ export default function App() {
               <Stack.Navigator
                 initialRouteName="Welcome"
                 screenOptions={{
-                  headerStyle: {
-                    backgroundColor: '#556B2F', // Olive color
-                  },
-                  headerTintColor: '#fff',
-                  headerTitleStyle: {
-                    fontWeight: 'bold',
-                  },
+                  headerShown: false, // <-- ADD THIS LINE HERE to hide header for ALL screens
+                  // The following header styles will now be effectively ignored
+                  // because the header itself is hidden.
+                  // headerStyle: {
+                  //   backgroundColor: '#556B2F', // Olive color
+                  // },
+                  // headerTintColor: '#fff',
+                  // headerTitleStyle: {
+                  //   fontWeight: 'bold',
+                  // },
                 }}
               >
                 <Stack.Screen
                   name="Welcome"
                   component={WelcomeScreen}
-                  options={{ title: 'Welcome' }}
+                  // You can remove options={{ title: 'Welcome' }} if the header is always hidden,
+                  // as the title won't be displayed anyway.
+                  // If you ever re-enable headers, you might want this back.
+                  options={{ title: 'Welcome' }} // Keeping it for potential future use or context
                 />
                 <Stack.Screen
                   name="Registration"
                   component={RegistrationScreen}
-                  options={{ title: 'Registration' }}
+                  options={{ title: 'Registration' }} // Keeping it for potential future use or context
                 />
                 <Stack.Screen
                   name="Questionnaire"
                   component={QuestionnaireScreen}
-                  options={{ title: 'Questionnaire', headerShown: false }}
+                  // No need for headerShown: false here anymore, as it's handled by the navigator
                 />
                 <Stack.Screen
                   name="MainScreen"
                   component={MainScreen}
-                  options={{ headerShown: false }}
+                  // No need for headerShown: false here anymore, as it's handled by the navigator
                 />
               </Stack.Navigator>
               <StatusBar style="light" />

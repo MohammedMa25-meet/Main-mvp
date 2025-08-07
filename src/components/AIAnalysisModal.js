@@ -95,7 +95,7 @@ const AIAnalysisModal = ({ visible, onClose, analysisStep = 0, totalSteps = 3 })
           {/* Header */}
           <View style={styles.header}>
             <View style={styles.aiIconContainer}>
-              <Ionicons name="sparkles" size={32} color="#556B2F" />
+              <Ionicons name="sparkles" size={32} color="#11523d" />
             </View>
             <Text style={[styles.title, isDarkMode && styles.titleDark]}>
               {t('Bridge-IT AI Analysis')}
@@ -129,7 +129,7 @@ const AIAnalysisModal = ({ visible, onClose, analysisStep = 0, totalSteps = 3 })
               <Ionicons 
                 name="checkmark-circle" 
                 size={24} 
-                color="#556B2F" 
+                color="#11523d" 
               />
             </View>
             <Text style={[styles.stepText, isDarkMode && styles.stepTextDark]}>
@@ -146,7 +146,7 @@ const AIAnalysisModal = ({ visible, onClose, analysisStep = 0, totalSteps = 3 })
                   styles.dot,
                   isDarkMode && styles.dotDark,
                   {
-                    backgroundColor: dot <= analysisStep ? '#556B2F' : '#E5E7EB',
+                    backgroundColor: dot <= analysisStep ? '#11523d' : '#E5E7EB',
                     transform: [{
                       scale: dot === analysisStep ? 1.2 : 1
                     }]
@@ -240,7 +240,7 @@ const styles = StyleSheet.create({
   },
   progressFill: {
     height: '100%',
-    backgroundColor: '#556B2F',
+    backgroundColor: '#11523d',
     borderRadius: 4,
   },
   progressText: {
