@@ -19,6 +19,8 @@ import { useUser } from '../context/UserContext';
 import { useLanguage } from '../context/LanguageContext';
 import { runFullAiAnalysis } from '../services/aiService';
 import { generateJobCatalog } from '../services/jobGenerator';
+import CareerPlan from './careerPlan';
+
 
 const HomepageScreen = ({ navigation, onScreenChange }) => {
   const { userData, updateUserData, clearUserData } = useUser();
@@ -30,6 +32,7 @@ const HomepageScreen = ({ navigation, onScreenChange }) => {
   const [showJobModal, setShowJobModal] = useState(false);
   const [showCourseModal, setShowCourseModal] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [currentScreen, setCurrentScreen] = useState('home');
 
   const [courses, setCourses] = useState([]);
   const [jobs, setJobs] = useState([]);
@@ -210,6 +213,15 @@ const HomepageScreen = ({ navigation, onScreenChange }) => {
     }
   };
 
+  // Career Plan Navigation Functions
+  const handleViewPlan = () => {
+    setCurrentScreen('careerPlan');
+  };
+
+  const handleBackToHome = () => {
+    setCurrentScreen('home');
+  };
+
   const handleMenuPress = () => setShowSidebar(!showSidebar);
   const handleJobPress = (job) => { 
     try {
@@ -246,13 +258,74 @@ const HomepageScreen = ({ navigation, onScreenChange }) => {
   const textStyle = isDarkMode ? styles.textDark : styles.text;
   const titleStyle = isDarkMode ? styles.titleDark : styles.title;
 
+  // Conditional rendering for Career Plan screen
+  if (currentScreen === 'careerPlan') {
+    return (
+      <CareerPlan
+        navigation={navigation} 
+        onScreenChange={(screen) => {
+          if (screen === 'Home') {
+            setCurrentScreen('home');
+          } else {
+            onScreenChange(screen);
+          }
+        }} 
+      />
+    );
+  }
+
   return (
     <SafeAreaView style={containerStyle}>
       {showSidebar && (
         <View style={[styles.sidebar, isDarkMode && styles.sidebarDark]}>
-          <View style={styles.sidebarHeader}><View style={styles.logoContainer}><View style={styles.logoCircle}><Text style={styles.logoText}>{userData.firstName ? userData.firstName.charAt(0).toUpperCase() : 'B'}</Text></View><Text style={[styles.logoTitle, titleStyle]}>BridgeIT</Text></View></View>
-          <View style={styles.sidebarMenu}><TouchableOpacity style={[styles.menuItem, styles.activeMenuItem]}><Ionicons name="home" size={20} color="#065F46" /><Text style={[styles.menuText, titleStyle]}>{t('Home')}</Text></TouchableOpacity><TouchableOpacity style={styles.menuItem} onPress={handleProfilePress}><Ionicons name="person" size={20} color="#6B7280" /><Text style={[styles.menuText, textStyle]}>{t('Profile')}</Text></TouchableOpacity><TouchableOpacity style={styles.menuItem} onPress={handleCalendarPress}><Ionicons name="calendar-outline" size={20} color="#6B7280" /><Text style={[styles.menuText, textStyle]}>{t('Calendar')}</Text></TouchableOpacity><TouchableOpacity style={styles.menuItem} onPress={handleSettingsPress}><Ionicons name="settings-outline" size={20} color="#6B7280" /><Text style={[styles.menuText, textStyle]}>{t('Settings')}</Text></TouchableOpacity><TouchableOpacity style={styles.menuItem} onPress={handleLogout}><Ionicons name="log-out-outline" size={20} color="#EF4444" /><Text style={[styles.menuText, { color: '#EF4444' }]}>{t('Logout')}</Text></TouchableOpacity></View>
-          <View style={styles.sidebarFooter}><View style={styles.userInfo}>{userData.profileImage ? <Image source={{ uri: userData.profileImage }} style={styles.userAvatar} /> : <View style={styles.userAvatarPlaceholder}><Text style={styles.userAvatarText}>{userData.firstName ? userData.firstName.charAt(0).toUpperCase() : 'U'}</Text></View>}<View><Text style={[styles.userName, titleStyle]}>{userData.firstName && userData.lastName ? `${userData.firstName} ${userData.lastName}` : userData.specialization || 'ICT Graduate'}</Text><Text style={[styles.userLocation, textStyle]}>{userData.region || 'West Bank'}</Text></View></View></View>
+          <View style={styles.sidebarHeader}>
+            <View style={styles.logoContainer}>
+              <View style={styles.logoCircle}>
+                <Text style={styles.logoText}>{userData.firstName ? userData.firstName.charAt(0).toUpperCase() : 'B'}</Text>
+              </View>
+              <Text style={[styles.logoTitle, titleStyle]}>BridgeIT</Text>
+            </View>
+          </View>
+          <View style={styles.sidebarMenu}>
+            <TouchableOpacity style={[styles.menuItem, styles.activeMenuItem]}>
+              <Ionicons name="home" size={20} color="#065F46" />
+              <Text style={[styles.menuText, titleStyle]}>{t('Home')}</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.menuItem} onPress={handleProfilePress}>
+              <Ionicons name="person" size={20} color="#6B7280" />
+              <Text style={[styles.menuText, textStyle]}>{t('Profile')}</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.menuItem} onPress={handleViewPlan}>
+              <Ionicons name="map-outline" size={20} color="#6B7280" />
+              <Text style={[styles.menuText, textStyle]}>{t('Career Plan')}</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.menuItem} onPress={handleCalendarPress}>
+              <Ionicons name="calendar-outline" size={20} color="#6B7280" />
+              <Text style={[styles.menuText, textStyle]}>{t('Calendar')}</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.menuItem} onPress={handleSettingsPress}>
+              <Ionicons name="settings-outline" size={20} color="#6B7280" />
+              <Text style={[styles.menuText, textStyle]}>{t('Settings')}</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.menuItem} onPress={handleLogout}>
+              <Ionicons name="log-out-outline" size={20} color="#EF4444" />
+              <Text style={[styles.menuText, { color: '#EF4444' }]}>{t('Logout')}</Text>
+            </TouchableOpacity>
+          </View>
+          <View style={styles.sidebarFooter}>
+            <View style={styles.userInfo}>
+              {userData.profileImage ? 
+                <Image source={{ uri: userData.profileImage }} style={styles.userAvatar} /> : 
+                <View style={styles.userAvatarPlaceholder}>
+                  <Text style={styles.userAvatarText}>{userData.firstName ? userData.firstName.charAt(0).toUpperCase() : 'U'}</Text>
+                </View>
+              }
+              <View>
+                <Text style={[styles.userName, titleStyle]}>{userData.firstName && userData.lastName ? `${userData.firstName} ${userData.lastName}` : userData.specialization || 'ICT Graduate'}</Text>
+                <Text style={[styles.userLocation, textStyle]}>{userData.region || 'West Bank'}</Text>
+              </View>
+            </View>
+          </View>
         </View>
       )}
 
@@ -283,20 +356,28 @@ const HomepageScreen = ({ navigation, onScreenChange }) => {
             <Text style={[styles.welcomeTitle, titleStyle]}>{t('Welcome')}, {userData.firstName || 'User'}!</Text>
             <Text style={[styles.welcomeSubtitle, textStyle]}>{t('Your career hub is ready.')}</Text>
           </View>
-          {userData.analysisComplete && (
-            <View style={styles.aiRecommendationsSection}>
-              <View style={styles.aiHeader}>
+
+          {/* Career Plan Ready Section */}
+          {userData && userData.analysisComplete && (
+            <View style={styles.careerPlanSection}>
+              <View style={styles.careerPlanHeader}>
                 <Ionicons name="sparkles" size={24} color="#11523d" />
-                <Text style={[styles.aiTitle, titleStyle]}>{t('AI Recommendations')}</Text>
+                <Text style={[styles.careerPlanTitle, titleStyle]}>{t('Your Career Plan is Ready!')}</Text>
               </View>
-              <Text style={[styles.aiSubtitle, textStyle]}>
-                {activeTab === 'Courses' 
-                  ? t('These courses are recommended by our AI based on your profile')
-                  : t('These jobs are recommended by our AI based on your profile')
-                }
+              <Text style={[styles.careerPlanSubtitle, textStyle]}>
+                {t('Based on your profile, we\'ve created a personalized career roadmap for you.')}
               </Text>
+              <TouchableOpacity 
+                style={styles.viewPlanButton} 
+                onPress={handleViewPlan}
+              >
+                <Text style={styles.viewPlanText}>{t('View Plan')}</Text>
+                <Ionicons name="arrow-forward" size={16} color="#ffffff" />
+              </TouchableOpacity>
             </View>
           )}
+
+          
           <View style={styles.tabContainer}>
             <TouchableOpacity style={[styles.tab, activeTab === 'Jobs' ? styles.activeTab : styles.inactiveTab]} onPress={() => setActiveTab('Jobs')}>
               <Ionicons name="briefcase-outline" size={20} color={activeTab === 'Jobs' ? "#1f2937" : "#9ca3af"} />
@@ -470,6 +551,39 @@ const styles = StyleSheet.create({
   welcomeSection: { paddingHorizontal: 20, paddingVertical: 24 },
   welcomeTitle: { fontSize: 24, fontWeight: '700', color: '#065f46', marginBottom: 8 },
   welcomeSubtitle: { fontSize: 16, color: '#6b7280', fontWeight: '400' },
+  
+  // Career Plan Section Styles
+  careerPlanSection: { 
+    paddingHorizontal: 20, 
+    paddingVertical: 16, 
+    backgroundColor: '#F0FDF4', 
+    marginHorizontal: 20, 
+    borderRadius: 12, 
+    marginBottom: 16,
+   
+  },
+  careerPlanHeader: { flexDirection: 'row', alignItems: 'center', marginBottom: 8 },
+  careerPlanTitle: { fontSize: 18, fontWeight: '600', color: '#065f46', marginLeft: 8 },
+  careerPlanSubtitle: { fontSize: 13, color: '#047857', lineHeight: 20, marginBottom: 12 },
+  
+  // View Plan Button Styles
+  viewPlanButton: {
+    backgroundColor: '#065f46',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+    borderRadius: 12,
+    marginTop: 8,
+  },
+  viewPlanText: {
+    color: '#ffffff',
+    fontSize: 16,
+    fontWeight: '600',
+    marginRight: 8,
+  },
+
   aiRecommendationsSection: { paddingHorizontal: 20, paddingVertical: 16, backgroundColor: '#F0FDF4', marginHorizontal: 20, borderRadius: 12, marginBottom: 16 },
   aiHeader: { flexDirection: 'row', alignItems: 'center', marginBottom: 8 },
   aiTitle: { fontSize: 18, fontWeight: '600', color: '#11523d', marginLeft: 8 },
